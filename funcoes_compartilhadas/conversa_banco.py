@@ -13,11 +13,15 @@ XML_BASE = os.path.join(os.getcwd(), "xmls")
 
 
 def conectar_google_sheets():
-    credenciais_dict = json.loads(st.secrets["GOOGLE_CREDENTIALS"])
-    credenciais = Credentials.from_service_account_info(credenciais_dict, scopes=SCOPES)
-    cliente = gspread.authorize(credenciais)
-    planilha = cliente.open_by_key(PLANILHA_ID)
-    return planilha
+    try:
+        credenciais_dict = json.loads(st.secrets["GOOGLE_CREDENTIALS"])
+        credenciais = Credentials.from_service_account_info(credenciais_dict, scopes=SCOPES)
+        cliente = gspread.authorize(credenciais)
+        planilha = cliente.open_by_key(PLANILHA_ID)
+        return planilha
+    except Exception as e:
+        st.error(f"Erro ao conectar com Google Sheets: {e}")
+        raise
 
 
 def hash_senha(senha: str) -> str:
