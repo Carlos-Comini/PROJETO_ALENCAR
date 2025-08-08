@@ -1,5 +1,4 @@
-from pydrive2.auth import GoogleAuth
-from pydrive2.drive import GoogleDrive
+
 
 from funcoes_compartilhadas.empresas_sql import listar_empresas
 from funcoes_compartilhadas.documentos_sql import criar_tabela_documentos, registrar_documento, listar_documentos
@@ -69,6 +68,7 @@ def extrair_info(nome_arquivo):
     return cnpj, banco, ano, mes
 
 def exibir():
+    criar_tabela_documentos()
     st.title("📁 Arquivos Contábil")
 
     BASE_DIR.mkdir(parents=True, exist_ok=True)
@@ -131,42 +131,4 @@ def exibir():
             with open(doc["caminho"], "rb") as f:
                 st.download_button("⬇️ Baixar", f, file_name=doc["nome"])
 
-    for cnpj_dir in BASE_DIR.iterdir():
-        if not cnpj_dir.is_dir():
-            continue
 
-        if st.session_state.get("usuario", {}).get("Tipo") == "Cliente":
-            if cnpj_dir.name != st.session_state["usuario"]["Empresa_ID"]:
-                continue
-
-        razao_social = cnpjs_empresas.get(cnpj_dir.name, cnpj_dir.name)
-
-        for banco_dir in cnpj_dir.iterdir():
-            for ano_dir in banco_dir.iterdir():
-                for mes_dir in ano_dir.iterdir():
-                    for arquivo in mes_dir.iterdir():
-                        tipo_mime, _ = mimetypes.guess_type(arquivo)
-                        arquivos_listados.append({
-                            "Empresa": razao_social,
-                            "CNPJ": cnpj_dir.name,
-                            "Banco": banco_dir.name,
-                            "Ano": ano_dir.name,
-                            "Mês": mes_dir.name,
-                            "Nome": arquivo.name,
-                            "Caminho": str(arquivo),
-                            "Tipo": tipo_mime or "desconhecido"
-                        })
-
-    empresas = sorted(set(a["Empresa"] for a in arquivos_listados))
-    filtro = st.selectbox("Filtrar por empresa", ["Todas"] + empresas)
-
-    if filtro != "Todas":
-        arquivos_listados = [a for a in arquivos_listados if a["Empresa"] == filtro]
-
-    for arq in arquivos_listados:
-        with st.expander(f'{arq["Nome"]} — {arq["Banco"]} {arq["Mês"]}/{arq["Ano"]} — {arq["Empresa"]}'):
-            st.write(f"📌 Empresa: {arq["Empresa"]}")
-            st.write(f"🏦 Banco: {arq["Banco"]}")
-            st.write(f"📅 Data: {arq["Mês"]}/{arq["Ano"]}")
-            with open(arq["Caminho"], "rb") as f:
-                st.download_button("⬇️ Baixar", f, file_name=arq["Nome"])

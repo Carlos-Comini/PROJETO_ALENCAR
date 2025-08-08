@@ -36,6 +36,7 @@ def parse_xml(file_path):
         return {"Número": "Erro", "Data": "Erro", "CNPJ_Emitente": "Erro", "CNPJ_Destinatario": "Erro", "Valor": "Erro"}
 
 def exibir():
+    criar_tabela_documentos()
     st.title("📂 Gestão de Arquivos XML")
     st.subheader("📤 Enviar XML manualmente")
     uploaded = st.file_uploader("Escolha um ou mais arquivos XML", type=["xml"], accept_multiple_files=True)
