@@ -1,3 +1,20 @@
+from pydrive2.auth import GoogleAuth
+from pydrive2.drive import GoogleDrive
+
+def upload_google_drive(file_obj, filename, folder_id=None):
+    import json
+    from io import BytesIO
+    from google.oauth2.service_account import Credentials
+    credenciais_dict = json.loads(st.secrets["GOOGLE_CREDENTIALS"])
+    gauth = GoogleAuth()
+    gauth.settings["client_config_backend"] = "service"
+    gauth.settings["service_config"] = credenciais_dict
+    gauth.ServiceAuth()
+    drive = GoogleDrive(gauth)
+    file_drive = drive.CreateFile({"title": filename, "parents": [{"id": folder_id}] if folder_id else []})
+    file_drive.SetContentString(file_obj.read().decode("latin1") if hasattr(file_obj, "read") else file_obj)
+    file_drive.Upload()
+    return file_drive["id"]
 import gspread
 import streamlit as st
 import xml.etree.ElementTree as ET
@@ -46,6 +63,25 @@ def parse_xml(file_path):
         return {"Número": "Erro", "Data": "Erro", "CNPJ_Emitente": "Erro", "CNPJ_Destinatario": "Erro", "Valor": "Erro"}
 
 def exibir():
+    st.subheader("📂 Arquivos no Google Drive (XMLX)")
+    try:
+        import json
+        folder_id = "1QrgORE3rm2d_CusD7cqT12wN5wQoeurj"
+        credenciais_dict = json.loads(st.secrets["GOOGLE_CREDENTIALS"])
+        gauth = GoogleAuth()
+        gauth.settings["client_config_backend"] = "service"
+        gauth.settings["service_config"] = credenciais_dict
+        gauth.ServiceAuth()
+        drive = GoogleDrive(gauth)
+        file_list = drive.ListFile({'q': f"'{folder_id}' in parents and trashed=false"}).GetList()
+        if file_list:
+            for file in file_list:
+                file_link = f'https://drive.google.com/file/d/{file["id"]}/view?usp=sharing'
+                st.markdown(f"- [{file['title']}]({file_link})")
+        else:
+            st.info("Nenhum arquivo encontrado na pasta do Google Drive.")
+    except Exception as e:
+        st.warning(f"Falha ao listar arquivos do Google Drive: {e}")
     st.title("📂 Gestão de Arquivos XML")
     st.subheader("📤 Enviar XML manualmente")
     uploaded = st.file_uploader("Escolha um ou mais arquivos XML", type=["xml"], accept_multiple_files=True)
@@ -68,6 +104,15 @@ def exibir():
             pasta_destino.mkdir(parents=True, exist_ok=True)
             caminho = pasta_destino / file.name
             temp_path.replace(caminho)
+
+            # Upload para Google Drive
+            file.seek(0)
+            try:
+                folder_id = "1V7qAWb8MpoX6fV9LVB0Cq8ovlogEanmt"
+                file_id = upload_google_drive(file, file.name, folder_id=folder_id)
+                st.info(f"Arquivo XML enviado para o Google Drive (ID: {file_id}) na pasta compartilhada!")
+            except Exception as e:
+                st.warning(f"Falha ao enviar para o Google Drive: {e}")
         st.success(f"{len(uploaded)} arquivo(s) salvo(s) com sucesso!")
 
     st.subheader("📁 Arquivos Recebidos")

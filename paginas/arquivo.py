@@ -1,3 +1,21 @@
+from pydrive2.auth import GoogleAuth
+from pydrive2.drive import GoogleDrive
+
+def upload_google_drive(file_obj, filename, folder_id=None):
+    import json
+    from io import BytesIO
+    from google.oauth2.service_account import Credentials
+    # Autenticação com credenciais do serviço
+    credenciais_dict = json.loads(st.secrets["GOOGLE_CREDENTIALS"])
+    gauth = GoogleAuth()
+    gauth.settings["client_config_backend"] = "service"
+    gauth.settings["service_config"] = credenciais_dict
+    gauth.ServiceAuth()
+    drive = GoogleDrive(gauth)
+    file_drive = drive.CreateFile({"title": filename, "parents": [{"id": folder_id}] if folder_id else []})
+    file_drive.SetContentString(file_obj.read().decode("latin1") if hasattr(file_obj, "read") else file_obj)
+    file_drive.Upload()
+    return file_drive["id"]
 import streamlit as st
 from funcoes_compartilhadas.estilos import aplicar_estilo_padrao, set_page_title
 aplicar_estilo_padrao()
@@ -102,6 +120,15 @@ def exibir():
             caminho = pasta_destino / nome
             with open(caminho, "wb") as f:
                 f.write(arq.read())
+
+            # Upload para Google Drive
+            arq.seek(0)
+            try:
+                folder_id = "1V7qAWb8MpoX6fV9LVB0Cq8ovlogEanmt"
+                file_id = upload_google_drive(arq, nome, folder_id=folder_id)
+                st.info(f"Arquivo enviado para o Google Drive (ID: {file_id}) na pasta compartilhada!")
+            except Exception as e:
+                st.warning(f"Falha ao enviar para o Google Drive: {e}")
 
         st.success(f"{len(arquivos)} arquivo(s) enviado(s) com sucesso!")
 
