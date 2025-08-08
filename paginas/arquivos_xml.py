@@ -63,25 +63,6 @@ def parse_xml(file_path):
         return {"Número": "Erro", "Data": "Erro", "CNPJ_Emitente": "Erro", "CNPJ_Destinatario": "Erro", "Valor": "Erro"}
 
 def exibir():
-    st.subheader("📂 Arquivos no Google Drive (XMLX)")
-    try:
-        import json
-        folder_id = "1QrgORE3rm2d_CusD7cqT12wN5wQoeurj"
-        credenciais_dict = json.loads(st.secrets["GOOGLE_CREDENTIALS"])
-        gauth = GoogleAuth()
-        gauth.settings["client_config_backend"] = "service"
-        gauth.settings["service_config"] = credenciais_dict
-        gauth.ServiceAuth()
-        drive = GoogleDrive(gauth)
-        file_list = drive.ListFile({'q': f"'{folder_id}' in parents and trashed=false"}).GetList()
-        if file_list:
-            for file in file_list:
-                file_link = f'https://drive.google.com/file/d/{file["id"]}/view?usp=sharing'
-                st.markdown(f"- [{file['title']}]({file_link})")
-        else:
-            st.info("Nenhum arquivo encontrado na pasta do Google Drive.")
-    except Exception as e:
-        st.warning(f"Falha ao listar arquivos do Google Drive: {e}")
     st.title("📂 Gestão de Arquivos XML")
     st.subheader("📤 Enviar XML manualmente")
     uploaded = st.file_uploader("Escolha um ou mais arquivos XML", type=["xml"], accept_multiple_files=True)
@@ -115,42 +96,22 @@ def exibir():
                 st.warning(f"Falha ao enviar para o Google Drive: {e}")
         st.success(f"{len(uploaded)} arquivo(s) salvo(s) com sucesso!")
 
-    st.subheader("📁 Arquivos Recebidos")
-    cnpjs_empresas = get_cnpjs_planilha()
-    dados = []
-    for cnpj_dir in XML_BASE.iterdir():
-        if cnpj_dir.is_dir():
-            if st.session_state.get("usuario", {}).get("Tipo") == "Cliente":
-                if cnpj_dir.name != st.session_state["usuario"]["Empresa_ID"]:
-                    continue
-            razao_social = cnpjs_empresas.get(cnpj_dir.name, cnpj_dir.name)
-            for data_dir in cnpj_dir.iterdir():
-                for xml in data_dir.glob("*.xml"):
-                    info = parse_xml(xml)
-                    info["Empresa"] = razao_social
-                    info["Arquivo"] = xml.name
-                    info["Caminho"] = str(xml)
-                    if info["CNPJ_Destinatario"] in cnpjs_empresas:
-                        info["Tipo"] = "ENTRADA"
-                        info["CNPJ"] = info["CNPJ_Destinatario"]
-                        info["Razao_Social"] = cnpjs_empresas.get(info["CNPJ_Destinatario"], "—")
-                    elif info["CNPJ_Emitente"] in cnpjs_empresas:
-                        info["Tipo"] = "SAÍDA"
-                        info["CNPJ"] = info["CNPJ_Emitente"]
-                        info["Razao_Social"] = cnpjs_empresas.get(info["CNPJ_Emitente"], "—")
-                    else:
-                        info["Tipo"] = "OUTRO"
-                        info["CNPJ"] = "-"
-                        info["Razao_Social"] = "—"
-                    dados.append(info)
-    empresas = sorted(set(d["Empresa"] for d in dados))
-    filtro_empresa = st.selectbox("Empresa", ["Todas"] + empresas)
-    if filtro_empresa != "Todas":
-        dados = [d for d in dados if d["Empresa"] == filtro_empresa]
-    for d in dados:
-        with st.expander(f'📄 {d["Arquivo"]} — {d["Data"]} — R$ {d["Valor"]} — {d["Tipo"]}'):
-            st.write(f"**Número:** {d['Número']}")
-            st.write(f"**CNPJ ({d['Tipo']}):** {d['CNPJ']}")
-            st.write(f"**Razão Social:** {d['Razao_Social']}")
-            st.write(f"**Empresa:** {d['Empresa']}")
-            st.download_button("⬇️ Baixar XML", data=open(d["Caminho"], "rb"), file_name=d["Arquivo"])
+    st.subheader("📁 Arquivos Recebidos (Google Drive XML)")
+    try:
+        import json
+        folder_id = "1QrgORE3rm2d_CusD7cqT12wN5wQoeurj"
+        credenciais_dict = json.loads(st.secrets["GOOGLE_CREDENTIALS"])
+        gauth = GoogleAuth()
+        gauth.settings["client_config_backend"] = "service"
+        gauth.settings["service_config"] = credenciais_dict
+        gauth.ServiceAuth()
+        drive = GoogleDrive(gauth)
+        file_list = drive.ListFile({'q': f"'{folder_id}' in parents and trashed=false"}).GetList()
+        if file_list:
+            for file in file_list:
+                file_link = f'https://drive.google.com/file/d/{file["id"]}/view?usp=sharing'
+                st.markdown(f"- [{file['title']}]({file_link})")
+        else:
+            st.info("Nenhum arquivo encontrado na pasta do Google Drive XMLX.")
+    except Exception as e:
+        st.warning(f"Falha ao listar arquivos do Google Drive: {e}")
