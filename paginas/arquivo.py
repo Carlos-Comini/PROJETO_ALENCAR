@@ -68,6 +68,8 @@ def extrair_info(nome_arquivo):
     return cnpj, banco, ano, mes
 
 def exibir():
+    from funcoes_compartilhadas.empresas_sql import criar_tabela_empresas
+    criar_tabela_empresas()
     criar_tabela_documentos()
     st.title("📁 Arquivos Contábil")
 

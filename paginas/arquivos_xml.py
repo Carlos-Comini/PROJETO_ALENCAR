@@ -36,6 +36,8 @@ def parse_xml(file_path):
         return {"Número": "Erro", "Data": "Erro", "CNPJ_Emitente": "Erro", "CNPJ_Destinatario": "Erro", "Valor": "Erro"}
 
 def exibir():
+    from funcoes_compartilhadas.empresas_sql import criar_tabela_empresas
+    criar_tabela_empresas()
     criar_tabela_documentos()
     st.title("📂 Gestão de Arquivos XML")
     st.subheader("📤 Enviar XML manualmente")
