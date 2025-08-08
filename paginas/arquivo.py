@@ -8,28 +8,11 @@ aplicar_estilo_padrao()
 set_page_title("Arquivo")
 st.markdown("""
     <style>
-    .topbar {position: fixed;top: 0;left: 0;width: 100vw;height: 64px;background: #263a53;display: flex;align-items: center;z-index: 100;box-shadow: 0 2px 8px #0002;}
-    .topbar-logo {height: 40px;margin-left: 32px;margin-right: 24px;}
-    .topbar-menu {display: flex;gap: 32px;}
-    .topbar-menu a {color: #fff;font-size: 1.1rem;text-decoration: none;font-weight: 500;padding: 8px 0;transition: color 0.2s;}
-    .topbar-menu a:hover {color: #42a5f5;}
-    .topbar-account {margin-left: auto;margin-right: 32px;background: #42a5f5;color: #fff;border-radius: 8px;padding: 8px 18px;font-weight: 600;font-size: 1rem;box-shadow: 0 2px 8px #0002;}
-    .stApp {padding-top: 72px !important;}
+    /* Remove qualquer padding/topbar customizada e deixa tela cheia */
+    .stApp {padding: 0 !important; margin: 0 !important; background: #fff !important; min-height: 100vh !important;}
+    section.main {box-shadow: none !important; border: none !important; width: 100vw !important; min-height: 100vh !important;}
+    .topbar, .topbar-logo, .topbar-menu, .topbar-account {display: none !important;}
     </style>
-    <div class="topbar">
-        <img src="https://raw.githubusercontent.com/Notalize/brand-assets/main/logo-notalize.png" class="topbar-logo" alt="Logo" />
-        <div class="topbar-menu">
-            <a href="#">Cadastros</a>
-            <a href="#">Administrativo</a>
-            <a href="#">Busca de Documentos</a>
-            <a href="#">NF-e | NFC-e | CF-e</a>
-            <a href="#">CT-e</a>
-            <a href="#">NFC-e</a>
-            <a href="#">MDF-e</a>
-            <a href="#">Relatórios</a>
-        </div>
-        <div class="topbar-account">Minha Conta</div>
-    </div>
 """, unsafe_allow_html=True)
 
 import streamlit as st
