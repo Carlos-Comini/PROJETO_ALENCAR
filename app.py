@@ -2,29 +2,22 @@ import streamlit as st
 st.markdown("""
     <style>
     /* Fundo escuro ocupando toda a tela */
-    .stApp, .block-container, html, body {
+    .stApp, html, body {
         background: #181a20 !important;
         min-height: 100vh !important;
-        width: 100vw !important;
         margin: 0 !important;
         padding: 0 !important;
         box-sizing: border-box !important;
     }
-    /* Centraliza o conteúdo vertical e horizontalmente */
+    /* Container principal adaptável, sem cortar menus */
     .block-container {
-        display: flex !important;
-        flex-direction: column;
-        justify-content: center !important;
-        align-items: center !important;
+        background: #181a20 !important;
         min-height: 100vh !important;
         max-width: 100vw !important;
-        width: 100vw !important;
-        margin: 0 !important;
+        margin: 0 auto !important;
         padding: 0 !important;
     }
-    /* Remove limites de largura dos elementos internos */
     section.main {
-        width: 100vw !important;
         min-height: 100vh !important;
         box-shadow: none !important;
         border: none !important;
