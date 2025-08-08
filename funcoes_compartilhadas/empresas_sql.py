@@ -1,3 +1,18 @@
+def criar_tabela_empresas():
+    conn = conectar()
+    cursor = conn.cursor()
+    cursor.execute('''
+        CREATE TABLE IF NOT EXISTS empresas (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            cnpj TEXT UNIQUE,
+            razao_social TEXT,
+            endereco TEXT,
+            telefone TEXT,
+            email TEXT
+        )
+    ''')
+    conn.commit()
+    conn.close()
 import sqlite3
 from typing import Optional, Dict, List
 
