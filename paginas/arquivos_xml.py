@@ -81,6 +81,8 @@ def exibir():
     docs_xml = [d for d in documentos if d["banco"] == "XML"]
     if filtro != "Todas":
         docs_xml = [d for d in docs_xml if d["empresa"] == filtro]
+    import os
+    from funcoes_compartilhadas.documentos_sql import deletar_documento
     if docs_xml:
         for doc in docs_xml:
             with st.expander(f'{doc["nome"]} — {doc["empresa"]} {doc["ano"]}/{doc["mes"]}'):
@@ -88,5 +90,24 @@ def exibir():
                 st.write(f"📅 Data: {doc['ano']}/{doc['mes']}")
                 with open(doc["caminho"], "rb") as f:
                     st.download_button("⬇️ Baixar XML", f, file_name=doc["nome"])
+                if st.button(f"🗑️ Excluir XML {doc['id']}", key=f"delxml_{doc['id']}"):
+                    if st.session_state.get(f"confirm_delxml_{doc['id']}") != True:
+                        st.warning("Tem certeza que deseja excluir este XML?")
+                        col1, col2 = st.columns(2)
+                        with col1:
+                            if st.button("Sim, excluir", key=f"confirma_xml_{doc['id']}"):
+                                st.session_state[f"confirm_delxml_{doc['id']}"] = True
+                        with col2:
+                            if st.button("Não cancelar", key=f"cancela_xml_{doc['id']}"):
+                                st.session_state[f"confirm_delxml_{doc['id']}"] = False
+                    elif st.session_state.get(f"confirm_delxml_{doc['id']}") == True:
+                        try:
+                            deletar_documento(doc['id'])
+                            if os.path.exists(doc['caminho']):
+                                os.remove(doc['caminho'])
+                            st.success("XML excluído com sucesso!")
+                            st.session_state[f"confirm_delxml_{doc['id']}"] = False
+                        except Exception as e:
+                            st.error(f"Erro ao excluir: {e}")
     else:
         st.info("Nenhum arquivo XML encontrado.")

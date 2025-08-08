@@ -1,3 +1,9 @@
+def deletar_documento(doc_id: int):
+    conn = conectar()
+    cursor = conn.cursor()
+    cursor.execute('DELETE FROM documentos WHERE id=?', (doc_id,))
+    conn.commit()
+    conn.close()
 import sqlite3
 from typing import Optional, Dict, List
 

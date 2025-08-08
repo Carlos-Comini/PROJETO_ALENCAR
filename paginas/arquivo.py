@@ -92,12 +92,17 @@ def exibir():
 
     if arquivos:
         from funcoes_compartilhadas.empresas_sql import buscar_empresa_por_cnpj
+        usuario = st.session_state.get("usuario", {}).get("Usuario", "anonimo")
+        empresa_usuario = st.session_state.get("usuario", {}).get("Empresa", "desconhecida")
         for arq in arquivos:
             nome = arq.name
             cnpj, banco, ano, mes = extrair_info(nome)
             pasta_destino = BASE_DIR / cnpj / banco / ano / mes
             pasta_destino.mkdir(parents=True, exist_ok=True)
-            caminho = pasta_destino / nome
+            # Novo nome: documento_usuario_empresa.ext
+            ext = Path(nome).suffix
+            nome_final = f"{Path(nome).stem}_{usuario}_{empresa_usuario}{ext}"
+            caminho = pasta_destino / nome_final
             with open(caminho, "wb") as f:
                 f.write(arq.read())
             # Buscar nome da empresa via SQL
@@ -105,13 +110,15 @@ def exibir():
             nome_empresa = empresa_info["razao_social"] if empresa_info else cnpj
             # Registrar no banco
             info_doc = {
-                "nome": nome,
+                "nome": nome_final,
                 "caminho": str(caminho),
                 "empresa": nome_empresa,
                 "cnpj": cnpj,
                 "banco": banco,
                 "ano": ano,
                 "mes": mes,
+                "usuario": usuario,
+                "empresa_usuario": empresa_usuario,
                 "tipo": mimetypes.guess_type(caminho)[0] or "desconhecido",
                 "data_upload": datetime.now().strftime("%Y-%m-%d %H:%M:%S")
             }
@@ -120,17 +127,39 @@ def exibir():
         st.success(f"{len(arquivos)} arquivo(s) enviado(s) com sucesso!")
 
     st.subheader("📂 Arquivos Armazenados")
-    documentos = listar_documentos()
+    documentos = [d for d in listar_documentos() if not d["nome"].lower().endswith(".xml")]
     empresas = sorted(set(d["empresa"] for d in documentos))
     filtro = st.selectbox("Filtrar por empresa", ["Todas"] + empresas)
     if filtro != "Todas":
         documentos = [d for d in documentos if d["empresa"] == filtro]
+    import os
+    from funcoes_compartilhadas.documentos_sql import deletar_documento
     for doc in documentos:
         with st.expander(f'{doc["nome"]} — {doc["banco"]} {doc["mes"]}/{doc["ano"]} — {doc["empresa"]}'):
             st.write(f"📌 Empresa: {doc['empresa']}")
             st.write(f"🏦 Banco: {doc['banco']}")
+            st.write(f"👤 Usuário: {doc.get('usuario', 'N/A')}")
             st.write(f"📅 Data: {doc['mes']}/{doc['ano']}")
             with open(doc["caminho"], "rb") as f:
                 st.download_button("⬇️ Baixar", f, file_name=doc["nome"])
+            if st.button(f"🗑️ Excluir documento {doc['id']}", key=f"del_{doc['id']}"):
+                if st.session_state.get(f"confirm_del_{doc['id']}") != True:
+                    st.warning("Tem certeza que deseja excluir este documento?")
+                    col1, col2 = st.columns(2)
+                    with col1:
+                        if st.button("Sim, excluir", key=f"confirma_{doc['id']}"):
+                            st.session_state[f"confirm_del_{doc['id']}"] = True
+                    with col2:
+                        if st.button("Não cancelar", key=f"cancela_{doc['id']}"):
+                            st.session_state[f"confirm_del_{doc['id']}"] = False
+                elif st.session_state.get(f"confirm_del_{doc['id']}") == True:
+                    try:
+                        deletar_documento(doc['id'])
+                        if os.path.exists(doc['caminho']):
+                            os.remove(doc['caminho'])
+                        st.success("Documento excluído com sucesso!")
+                        st.session_state[f"confirm_del_{doc['id']}"] = False
+                    except Exception as e:
+                        st.error(f"Erro ao excluir: {e}")
 
 
