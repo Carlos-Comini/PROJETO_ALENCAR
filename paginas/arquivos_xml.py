@@ -103,7 +103,7 @@ def exibir():
         credenciais_dict = json.loads(st.secrets["GOOGLE_CREDENTIALS"])
         gauth = GoogleAuth()
         gauth.settings["client_config_backend"] = "service"
-        gauth.settings["service_config"] = credenciais_dict
+        gauth.settings["service_config"] = {"client_json_dict": credenciais_dict}
         gauth.ServiceAuth()
         drive = GoogleDrive(gauth)
         file_list = drive.ListFile({'q': f"'{folder_id}' in parents and trashed=false"}).GetList()
