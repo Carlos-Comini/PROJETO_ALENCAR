@@ -1,13 +1,29 @@
 import streamlit as st
 st.markdown("""
     <style>
-    /* Remove padding, margens e bordas do app inteiro */
-    .stApp {padding: 0 !important; margin: 0 !important; background: #fff !important; min-height: 100vh !important;}
-    section.main {box-shadow: none !important; border: none !important; width: 100vw !important; min-height: 100vh !important;}
-    /* Remove qualquer barra customizada se houver */
-    .topbar, .topbar-logo, .topbar-menu, .topbar-account {display: none !important;}
-    /* Garante responsividade */
-    html, body {width: 100vw !important; min-height: 100vh !important; margin: 0 !important; padding: 0 !important;}
+    /* Remove limites e margens do container principal */
+    .block-container {
+        padding: 0 !important;
+        margin: 0 auto !important;
+        max-width: 100vw !important;
+        width: 100vw !important;
+        min-height: 100vh !important;
+        background: #fff !important;
+    }
+    .stApp {
+        background: #fff !important;
+        min-height: 100vh !important;
+        width: 100vw !important;
+        margin: 0 !important;
+        padding: 0 !important;
+    }
+    html, body {
+        width: 100vw !important;
+        min-height: 100vh !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        background: #fff !important;
+    }
     </style>
 """, unsafe_allow_html=True)
 import streamlit as st
