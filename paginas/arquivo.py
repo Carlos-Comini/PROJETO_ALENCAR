@@ -1,21 +1,8 @@
 from pydrive2.auth import GoogleAuth
 from pydrive2.drive import GoogleDrive
 
-def upload_google_drive(file_obj, filename, folder_id=None):
-    import json
-    from io import BytesIO
-    from google.oauth2.service_account import Credentials
-    # Autenticação com credenciais do serviço
-    credenciais_dict = json.loads(st.secrets["GOOGLE_CREDENTIALS"])
-    gauth = GoogleAuth()
-    gauth.settings["client_config_backend"] = "service"
-    gauth.settings["service_config"] = credenciais_dict
-    gauth.ServiceAuth()
-    drive = GoogleDrive(gauth)
-    file_drive = drive.CreateFile({"title": filename, "parents": [{"id": folder_id}] if folder_id else []})
-    file_drive.SetContentString(file_obj.read().decode("latin1") if hasattr(file_obj, "read") else file_obj)
-    file_drive.Upload()
-    return file_drive["id"]
+from funcoes_compartilhadas.empresas_sql import listar_empresas
+from funcoes_compartilhadas.documentos_sql import criar_tabela_documentos, registrar_documento, listar_documentos
 import streamlit as st
 from funcoes_compartilhadas.estilos import aplicar_estilo_padrao, set_page_title
 aplicar_estilo_padrao()
@@ -50,7 +37,6 @@ import streamlit as st
 from pathlib import Path
 from datetime import datetime
 import mimetypes
-import gspread
 import re
 
 BASE_DIR = Path("arquivo")
@@ -61,17 +47,9 @@ BANCOS_CONHECIDOS = [
     "SANTANDER", "INTER", "NUBANK", "BTG", "C6", "XP"
 ]
 
-def get_cnpjs_planilha():
-    import json
-    from google.oauth2.service_account import Credentials
-    credenciais_dict = json.loads(st.secrets["GOOGLE_CREDENTIALS"])
-    credenciais = Credentials.from_service_account_info(credenciais_dict)
-    gc = gspread.authorize(credenciais)
-    sh = gc.open_by_key('1bJOkcArR6DZK_7SYwiAiFZEPE9t8HQ1d6ZmDoigCPJw')
-    ws = sh.worksheet('Empresas')
-    cnpjs = ws.col_values(2)[1:]
-    razoes = ws.col_values(3)[1:]
-    return {cnpj: razao for cnpj, razao in zip(cnpjs, razoes)}
+def get_cnpjs_sql():
+    empresas = listar_empresas()
+    return {e['cnpj']: e['razao_social'] for e in empresas}
 
 def extrair_info(nome_arquivo):
     nome_limpo = nome_arquivo.lower()
@@ -94,6 +72,7 @@ def exibir():
     st.title("📁 Arquivos Contábil")
 
     BASE_DIR.mkdir(parents=True, exist_ok=True)
+    criar_tabela_documentos()
     st.subheader("📤 Enviar arquivos")
 
     tipos_aceitos = [
@@ -110,31 +89,47 @@ def exibir():
     )
 
     if arquivos:
+        from funcoes_compartilhadas.empresas_sql import buscar_empresa_por_cnpj
         for arq in arquivos:
             nome = arq.name
             cnpj, banco, ano, mes = extrair_info(nome)
-
             pasta_destino = BASE_DIR / cnpj / banco / ano / mes
             pasta_destino.mkdir(parents=True, exist_ok=True)
-
             caminho = pasta_destino / nome
             with open(caminho, "wb") as f:
                 f.write(arq.read())
-
-            # Upload para Google Drive
-            arq.seek(0)
-            try:
-                folder_id = "1V7qAWb8MpoX6fV9LVB0Cq8ovlogEanmt"
-                file_id = upload_google_drive(arq, nome, folder_id=folder_id)
-                st.info(f"Arquivo enviado para o Google Drive (ID: {file_id}) na pasta compartilhada!")
-            except Exception as e:
-                st.warning(f"Falha ao enviar para o Google Drive: {e}")
-
+            # Buscar nome da empresa via SQL
+            empresa_info = buscar_empresa_por_cnpj(cnpj)
+            nome_empresa = empresa_info["razao_social"] if empresa_info else cnpj
+            # Registrar no banco
+            info_doc = {
+                "nome": nome,
+                "caminho": str(caminho),
+                "empresa": nome_empresa,
+                "cnpj": cnpj,
+                "banco": banco,
+                "ano": ano,
+                "mes": mes,
+                "tipo": mimetypes.guess_type(caminho)[0] or "desconhecido",
+                "data_upload": datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+            }
+            registrar_documento(info_doc)
+            st.info("Arquivo salvo e registrado!")
         st.success(f"{len(arquivos)} arquivo(s) enviado(s) com sucesso!")
 
     st.subheader("📂 Arquivos Armazenados")
-    cnpjs_empresas = get_cnpjs_planilha()
-    arquivos_listados = []
+    documentos = listar_documentos()
+    empresas = sorted(set(d["empresa"] for d in documentos))
+    filtro = st.selectbox("Filtrar por empresa", ["Todas"] + empresas)
+    if filtro != "Todas":
+        documentos = [d for d in documentos if d["empresa"] == filtro]
+    for doc in documentos:
+        with st.expander(f'{doc["nome"]} — {doc["banco"]} {doc["mes"]}/{doc["ano"]} — {doc["empresa"]}'):
+            st.write(f"📌 Empresa: {doc['empresa']}")
+            st.write(f"🏦 Banco: {doc['banco']}")
+            st.write(f"📅 Data: {doc['mes']}/{doc['ano']}")
+            with open(doc["caminho"], "rb") as f:
+                st.download_button("⬇️ Baixar", f, file_name=doc["nome"])
 
     for cnpj_dir in BASE_DIR.iterdir():
         if not cnpj_dir.is_dir():
