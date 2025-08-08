@@ -96,14 +96,17 @@ def exibir():
                 st.warning(f"Falha ao enviar para o Google Drive: {e}")
         st.success(f"{len(uploaded)} arquivo(s) salvo(s) com sucesso!")
 
-    st.subheader("📁 Arquivos Recebidos (Google Drive XML)")
+    st.subheader("📁 Arquivos Recebidos")
     try:
         import json
         folder_id = "1QrgORE3rm2d_CusD7cqT12wN5wQoeurj"
         credenciais_dict = json.loads(st.secrets["GOOGLE_CREDENTIALS"])
         gauth = GoogleAuth()
         gauth.settings["client_config_backend"] = "service"
-        gauth.settings["service_config"] = {"client_json_dict": credenciais_dict}
+        gauth.settings["service_config"] = {
+            "client_json_dict": credenciais_dict,
+            "client_user_email": credenciais_dict.get("client_email")
+        }
         gauth.ServiceAuth()
         drive = GoogleDrive(gauth)
         file_list = drive.ListFile({'q': f"'{folder_id}' in parents and trashed=false"}).GetList()
