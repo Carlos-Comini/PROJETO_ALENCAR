@@ -1,28 +1,36 @@
 import streamlit as st
 st.markdown("""
     <style>
-    /* Remove limites e margens do container principal */
-    .block-container {
+    /* Fundo escuro ocupando toda a tela */
+    .stApp, .block-container, html, body {
+        background: #181a20 !important;
+        min-height: 100vh !important;
+        width: 100vw !important;
+        margin: 0 !important;
         padding: 0 !important;
-        margin: 0 auto !important;
+        box-sizing: border-box !important;
+    }
+    /* Centraliza o conteúdo vertical e horizontalmente */
+    .block-container {
+        display: flex !important;
+        flex-direction: column;
+        justify-content: center !important;
+        align-items: center !important;
+        min-height: 100vh !important;
         max-width: 100vw !important;
         width: 100vw !important;
-        min-height: 100vh !important;
-        background: #fff !important;
-    }
-    .stApp {
-        background: #fff !important;
-        min-height: 100vh !important;
-        width: 100vw !important;
         margin: 0 !important;
         padding: 0 !important;
     }
-    html, body {
+    /* Remove limites de largura dos elementos internos */
+    section.main {
         width: 100vw !important;
         min-height: 100vh !important;
+        box-shadow: none !important;
+        border: none !important;
         margin: 0 !important;
         padding: 0 !important;
-        background: #fff !important;
+        background: transparent !important;
     }
     </style>
 """, unsafe_allow_html=True)
