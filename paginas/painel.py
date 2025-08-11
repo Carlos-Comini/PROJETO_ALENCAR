@@ -13,15 +13,18 @@ COR_TXT = "#FFFFFF"  # texto
 def exibir():
     st.title("Dashboard Simples")
     st.subheader("Empresas Registradas")
-    from funcoes_compartilhadas.empresas_sql import listar_empresas
-    empresas = listar_empresas()
+    from funcoes_compartilhadas.empresas_sql import listar_empresas, criar_tabela_empresas
+    from funcoes_compartilhadas.usuarios_sql import listar_usuarios, criar_tabela_usuarios
     import pandas as pd
+    # Garante que as tabelas existem
+    criar_tabela_empresas()
+    criar_tabela_usuarios()
+    empresas = listar_empresas()
     df_empresas = pd.DataFrame(empresas)
     st.dataframe(df_empresas, use_container_width=True)
 
     st.subheader("Usuários Registrados")
     try:
-        from funcoes_compartilhadas.usuarios_sql import listar_usuarios
         usuarios = listar_usuarios()
         df_usuarios = pd.DataFrame(usuarios)
         st.dataframe(df_usuarios, use_container_width=True)
