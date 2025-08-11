@@ -31,7 +31,7 @@ f"""
 <style>
 html, body, .stApp {{
     font-family: {FONTES['poppins']} !important;
-    background-color: #1f2c3e !important;
+    background: transparent !important;
 }}
 
 .material-icons {{
