@@ -140,7 +140,6 @@ def exibir():
                             )
                             st.session_state[f"confirm_delxml_{doc['id']}"] = False
                             # Atualiza a lista de documentos para sumir da tabela
-                            documentos = [d for d in listar_documentos() if d["banco"] == "XML"]
                             st.experimental_rerun()
                         except Exception as e:
                             st.error(f"Erro ao excluir: {e}\nCaminho do arquivo: {doc['caminho']}")

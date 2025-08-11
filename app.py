@@ -82,15 +82,14 @@ def processa_login_por_url():
         else:
             st.error("❌ Login inválido.")
 
-if not st.session_state.usuario_autenticado:
+if not st.session_state.usuario_autenticado or "menu" not in st.session_state:
     exibir_login_html()
     processa_login_por_url()
 else:
     aplicar_estilo_padrao()
 
     # Inicializa o menu na sessão se não existir
-    if "menu" not in st.session_state:
-        st.session_state["menu"] = "Dashboard"
+    st.session_state["menu"] = st.session_state.get("menu", "Dashboard")
 
     # Permissões do usuário logado
     dados_usuario = st.session_state.get("dados_usuario", {})
