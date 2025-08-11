@@ -40,7 +40,7 @@ def exibir():
     escolha = st.radio("Selecione a opção:", ["Cadastro de Usuário", "Usuários cadastrados"], horizontal=True)
 
     if escolha == "Cadastro de Usuário":
-        tipo = st.radio("Tipo de Usuário", ["Escritório", "Cliente"])
+        tipo = st.radio("Tipo de Usuário", ["Escritório", "Cliente"], horizontal=True)
         with st.form("form_usuario"):
             nome = st.text_input("Nome")
             email = st.text_input("Email")
