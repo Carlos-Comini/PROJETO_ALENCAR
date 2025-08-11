@@ -65,7 +65,16 @@ def exibir():
                 import pandas as pd
                 from funcoes_compartilhadas.empresas_sql import listar_empresas
                 empresas_df = pd.DataFrame(listar_empresas())
-                empresas = empresas_df["nome_empresa"].tolist() if not empresas_df.empty else []
+                # Corrige KeyError: usa 'razao_social' se 'nome_empresa' não existir
+                if not empresas_df.empty:
+                    if "nome_empresa" in empresas_df.columns:
+                        empresas = empresas_df["nome_empresa"].tolist()
+                    elif "razao_social" in empresas_df.columns:
+                        empresas = empresas_df["razao_social"].tolist()
+                    else:
+                        empresas = empresas_df.iloc[:,0].astype(str).tolist()
+                else:
+                    empresas = []
                 empresa = st.selectbox("Empresa", empresas)
                 permitir_ver_arquivo = st.checkbox("Permitir Ver Arquivo")
                 permitir_ver_xml = st.checkbox("Permitir Ver XML")
