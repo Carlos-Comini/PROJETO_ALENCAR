@@ -4,7 +4,31 @@ from typing import Optional, Dict
 DB_PATH = 'usuarios.db'
 
 def conectar():
-    return sqlite3.connect(DB_PATH)
+    conn = sqlite3.connect(DB_PATH)
+    conn.execute('''CREATE TABLE IF NOT EXISTS usuarios (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        nome TEXT NOT NULL,
+        email TEXT NOT NULL,
+        senha TEXT NOT NULL,
+        tipo TEXT NOT NULL,
+        empresa TEXT,
+        cadastrar TEXT,
+        ver_arquivo TEXT,
+        ver_xml TEXT
+    )''')
+    return conn
+def inserir_usuario(nome, email, senha, tipo, empresa=None, permissoes=None):
+    conn = conectar()
+    cursor = conn.cursor()
+    cadastrar = 'Sim' if permissoes and permissoes.get('cadastrar') else 'Não'
+    ver_arquivo = 'Sim' if permissoes and permissoes.get('ver_arquivo') else 'Não'
+    ver_xml = 'Sim' if permissoes and permissoes.get('ver_xml') else 'Não'
+    cursor.execute('''INSERT INTO usuarios (nome, email, senha, tipo, empresa, cadastrar, ver_arquivo, ver_xml)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?)''',
+        (nome, email, senha, tipo, empresa, cadastrar, ver_arquivo, ver_xml)
+    )
+    conn.commit()
+    conn.close()
 
 def autenticar(email: str, senha: str) -> Optional[Dict]:
     conn = conectar()

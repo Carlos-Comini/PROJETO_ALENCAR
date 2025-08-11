@@ -1,6 +1,6 @@
 import streamlit as st
 import requests
-from funcoes_compartilhadas.conversa_banco import salvar_empresa
+from funcoes_compartilhadas.empresas_sql import inserir_empresa
 from funcoes_compartilhadas.estilos import aplicar_estilo_padrao, set_page_title
 
 def buscar_razao_social(cnpj):
@@ -35,7 +35,7 @@ def exibir():
 
         if salvar:
             if cnpj and razao_social:
-                salvar_empresa("Empresa", cnpj, razao_social)
+                inserir_empresa(cnpj, razao_social)
                 st.success("Empresa cadastrada com sucesso.")
                 st.session_state["razao_social"] = ""
             else:

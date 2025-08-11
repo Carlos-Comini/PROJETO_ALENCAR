@@ -29,7 +29,7 @@ st.markdown("""
     </div>
 """, unsafe_allow_html=True)
 import streamlit as st
-from funcoes_compartilhadas.conversa_banco import salvar_usuario, conectar_google_sheets
+from funcoes_compartilhadas.usuarios_sql import inserir_usuario, listar_usuarios
 from funcoes_compartilhadas.estilos import aplicar_estilo_padrao
 
 def exibir():
@@ -53,12 +53,15 @@ def exibir():
                     "ver_arquivo": permitir_ver_arquivo,
                     "ver_xml": permitir_ver_xml
                 }
-                salvar_usuario(nome, email, senha, "Escritorio", permissoes=permissoes)
+                inserir_usuario(nome, email, senha, "Escritorio", permissoes=permissoes)
                 st.success("Usuário do escritório cadastrado.")
 
         else:
-            planilha = conectar_google_sheets()
-            empresas = planilha.worksheet("Empresas").col_values(2)[1:]
+            # Buscar empresas do banco SQL
+            import pandas as pd
+            from funcoes_compartilhadas.empresas_sql import listar_empresas
+            empresas_df = pd.DataFrame(listar_empresas())
+            empresas = empresas_df["nome_empresa"].tolist() if not empresas_df.empty else []
             empresa = st.selectbox("Empresa", empresas)
             permitir_ver_arquivo = st.checkbox("Permitir Ver Arquivo")
             permitir_ver_xml = st.checkbox("Permitir Ver XML")
@@ -68,5 +71,14 @@ def exibir():
                     "ver_arquivo": permitir_ver_arquivo,
                     "ver_xml": permitir_ver_xml
                 }
-                salvar_usuario(nome, email, senha, "Cliente", empresa=empresa, permissoes=permissoes)
+                inserir_usuario(nome, email, senha, "Cliente", empresa=empresa, permissoes=permissoes)
                 st.success("Usuário de cliente cadastrado.")
+
+    # Exibir tabela de usuários cadastrados
+    st.subheader("Usuários cadastrados")
+    usuarios = listar_usuarios()
+    if usuarios:
+        import pandas as pd
+        st.dataframe(pd.DataFrame(usuarios))
+    else:
+        st.info("Nenhum usuário cadastrado ainda.")

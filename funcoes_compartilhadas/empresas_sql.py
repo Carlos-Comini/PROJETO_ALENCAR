@@ -1,3 +1,13 @@
+def inserir_empresa(cnpj, razao_social, endereco=None, telefone=None, email=None):
+    criar_tabela_empresas()
+    conn = conectar()
+    cursor = conn.cursor()
+    cursor.execute('''
+        INSERT OR IGNORE INTO empresas (cnpj, razao_social, endereco, telefone, email)
+        VALUES (?, ?, ?, ?, ?)
+    ''', (cnpj, razao_social, endereco or '', telefone or '', email or ''))
+    conn.commit()
+    conn.close()
 def criar_tabela_empresas():
     conn = conectar()
     cursor = conn.cursor()
