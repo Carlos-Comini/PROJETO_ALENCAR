@@ -29,13 +29,11 @@ def hash_senha(senha: str) -> str:
 
 
 def autenticar_usuario(email, senha):
-    planilha = conectar_google_sheets()
-    aba = planilha.worksheet("Usuarios")
-    dados = aba.get_all_records()
+    from funcoes_compartilhadas.usuarios_sql import autenticar
     senha_hash = hash_senha(senha)
-    for usuario in dados:
-        if usuario["Email"].lower() == email.lower() and usuario["Senha"] == senha_hash:
-            return True, usuario.get("Tipo", ""), usuario
+    usuario = autenticar(email, senha_hash)
+    if usuario:
+        return True, usuario.get("tipo", ""), usuario
     return False, None, None
 
 
