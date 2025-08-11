@@ -36,59 +36,62 @@ def exibir():
     aplicar_estilo_padrao()
     st.header("Cadastro de Usuários")
 
-    tipo = st.radio("Tipo de Usuário", ["Escritório", "Cliente"])
-    with st.form("form_usuario"):
-        nome = st.text_input("Nome")
-        email = st.text_input("Email")
-        senha = st.text_input("Senha", type="password")
-
-        if tipo == "Escritório":
-            permitir_cadastros = st.checkbox("Permitir Cadastros")
-            permitir_ver_arquivo = st.checkbox("Permitir Ver Arquivo")
-            permitir_ver_xml = st.checkbox("Permitir Ver XML")
-
-            if st.form_submit_button("Salvar"):
-                permissoes = {
-                    "cadastrar": permitir_cadastros,
-                    "ver_arquivo": permitir_ver_arquivo,
-                    "ver_xml": permitir_ver_xml
-                }
-                inserir_usuario(nome, email, senha, "Escritorio", permissoes=permissoes)
-                st.success("Usuário do escritório cadastrado.")
-
-        else:
-            # Buscar empresas do banco SQL
-            import pandas as pd
-            from funcoes_compartilhadas.empresas_sql import listar_empresas
-            empresas_df = pd.DataFrame(listar_empresas())
-            empresas = empresas_df["nome_empresa"].tolist() if not empresas_df.empty else []
-            empresa = st.selectbox("Empresa", empresas)
-            permitir_ver_arquivo = st.checkbox("Permitir Ver Arquivo")
-            permitir_ver_xml = st.checkbox("Permitir Ver XML")
-
-            if st.form_submit_button("Salvar"):
-                permissoes = {
-                    "ver_arquivo": permitir_ver_arquivo,
-                    "ver_xml": permitir_ver_xml
-                }
-                inserir_usuario(nome, email, senha, "Cliente", empresa=empresa, permissoes=permissoes)
-                st.success("Usuário de cliente cadastrado.")
-
-    # Exibir tabelas separadas de usuários cadastrados
     st.markdown("---")
-    st.subheader("Usuários cadastrados")
-    opcao_tabela = st.radio("Visualizar usuários do tipo:", ["Escritório", "Cliente"], horizontal=True)
-    usuarios = listar_usuarios()
-    import pandas as pd
-    if usuarios:
-        df_usuarios = pd.DataFrame(usuarios)
-        if opcao_tabela == "Escritório":
-            df_filtrados = df_usuarios[df_usuarios["tipo"].str.lower() == "escritorio"]
+    escolha = st.radio("Selecione a opção:", ["Cadastro de Usuário", "Usuários cadastrados"], horizontal=True)
+
+    if escolha == "Cadastro de Usuário":
+        tipo = st.radio("Tipo de Usuário", ["Escritório", "Cliente"])
+        with st.form("form_usuario"):
+            nome = st.text_input("Nome")
+            email = st.text_input("Email")
+            senha = st.text_input("Senha", type="password")
+
+            if tipo == "Escritório":
+                permitir_cadastros = st.checkbox("Permitir Cadastros")
+                permitir_ver_arquivo = st.checkbox("Permitir Ver Arquivo")
+                permitir_ver_xml = st.checkbox("Permitir Ver XML")
+
+                if st.form_submit_button("Salvar"):
+                    permissoes = {
+                        "cadastrar": permitir_cadastros,
+                        "ver_arquivo": permitir_ver_arquivo,
+                        "ver_xml": permitir_ver_xml
+                    }
+                    inserir_usuario(nome, email, senha, "Escritorio", permissoes=permissoes)
+                    st.success("Usuário do escritório cadastrado.")
+
+            else:
+                # Buscar empresas do banco SQL
+                import pandas as pd
+                from funcoes_compartilhadas.empresas_sql import listar_empresas
+                empresas_df = pd.DataFrame(listar_empresas())
+                empresas = empresas_df["nome_empresa"].tolist() if not empresas_df.empty else []
+                empresa = st.selectbox("Empresa", empresas)
+                permitir_ver_arquivo = st.checkbox("Permitir Ver Arquivo")
+                permitir_ver_xml = st.checkbox("Permitir Ver XML")
+
+                if st.form_submit_button("Salvar"):
+                    permissoes = {
+                        "ver_arquivo": permitir_ver_arquivo,
+                        "ver_xml": permitir_ver_xml
+                    }
+                    inserir_usuario(nome, email, senha, "Cliente", empresa=empresa, permissoes=permissoes)
+                    st.success("Usuário de cliente cadastrado.")
+
+    elif escolha == "Usuários cadastrados":
+        st.subheader("Usuários cadastrados")
+        opcao_tabela = st.radio("Visualizar usuários do tipo:", ["Escritório", "Cliente"], horizontal=True)
+        usuarios = listar_usuarios()
+        import pandas as pd
+        if usuarios:
+            df_usuarios = pd.DataFrame(usuarios)
+            if opcao_tabela == "Escritório":
+                df_filtrados = df_usuarios[df_usuarios["tipo"].str.lower() == "escritorio"]
+            else:
+                df_filtrados = df_usuarios[df_usuarios["tipo"].str.lower() == "cliente"]
+            if not df_filtrados.empty:
+                st.dataframe(df_filtrados, use_container_width=True)
+            else:
+                st.info(f"Nenhum usuário do tipo {opcao_tabela} cadastrado ainda.")
         else:
-            df_filtrados = df_usuarios[df_usuarios["tipo"].str.lower() == "cliente"]
-        if not df_filtrados.empty:
-            st.dataframe(df_filtrados, use_container_width=True)
-        else:
-            st.info(f"Nenhum usuário do tipo {opcao_tabela} cadastrado ainda.")
-    else:
-        st.info("Nenhum usuário cadastrado ainda.")
+            st.info("Nenhum usuário cadastrado ainda.")
