@@ -15,7 +15,7 @@ st.markdown("""
         min-height: 100vh !important;
         max-width: 100vw !important;
         margin: 0 auto !important;
-        padding: 32px 48px !important;
+        padding: 12px 12px !important;
         box-sizing: border-box !important;
     }
     section.main {
