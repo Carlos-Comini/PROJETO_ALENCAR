@@ -75,20 +75,28 @@ def exibir():
             pasta_destino.mkdir(parents=True, exist_ok=True)
             caminho = pasta_destino / file.name
             temp_path.replace(caminho)
-            # Registrar no banco
-            info_doc = {
-                "nome": file.name,
-                "caminho": str(caminho),
-                "empresa": nome_empresa,
-                "cnpj": cnpj,
-                "banco": "XML",
-                "ano": hoje.split('_')[0],
-                "mes": hoje.split('_')[1],
-                "tipo": f"xml_{tipo_xml}",
-                "data_upload": datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-            }
-            registrar_documento(info_doc)
-            st.info(f"Arquivo XML salvo e registrado como XML de {tipo_xml}!")
+            # Evita duplicidade: verifica se já existe registro igual
+            documentos_existentes = listar_documentos()
+            ja_existe = any(
+                d["nome"] == file.name and d["caminho"] == str(caminho)
+                for d in documentos_existentes
+            )
+            if ja_existe:
+                st.warning(f"O arquivo '{file.name}' já foi registrado para esta empresa e data.")
+            else:
+                info_doc = {
+                    "nome": file.name,
+                    "caminho": str(caminho),
+                    "empresa": nome_empresa,
+                    "cnpj": cnpj,
+                    "banco": "XML",
+                    "ano": hoje.split('_')[0],
+                    "mes": hoje.split('_')[1],
+                    "tipo": f"xml_{tipo_xml}",
+                    "data_upload": datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+                }
+                registrar_documento(info_doc)
+                st.info(f"Arquivo XML salvo e registrado como XML de {tipo_xml}!")
         st.success(f"{len(uploaded)} arquivo(s) salvo(s) com sucesso!")
 
     st.subheader("📁 Arquivos Recebidos")
@@ -120,12 +128,19 @@ def exibir():
                     elif st.session_state.get(f"confirm_delxml_{doc['id']}") == True:
                         try:
                             deletar_documento(doc['id'])
+                            excluiu_arquivo = False
                             if os.path.exists(doc['caminho']):
                                 os.remove(doc['caminho'])
-                            st.success("XML excluído com sucesso!")
+                                excluiu_arquivo = True
+                            st.success(
+                                f"XML excluído com sucesso!\n"
+                                f"Caminho do arquivo: {doc['caminho']}\n"
+                                f"Arquivo físico removido: {'Sim' if excluiu_arquivo else 'Não'}\n"
+                                f"Registro removido do banco: Sim"
+                            )
                             st.session_state[f"confirm_delxml_{doc['id']}"] = False
                             st.experimental_rerun()
                         except Exception as e:
-                            st.error(f"Erro ao excluir: {e}")
+                            st.error(f"Erro ao excluir: {e}\nCaminho do arquivo: {doc['caminho']}")
     else:
         st.info("Nenhum arquivo XML encontrado.")
