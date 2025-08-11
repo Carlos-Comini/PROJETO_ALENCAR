@@ -99,20 +99,20 @@ def exibir():
             cnpj, banco, ano, mes = extrair_info(nome)
             pasta_destino = BASE_DIR / cnpj / banco / ano / mes
             pasta_destino.mkdir(parents=True, exist_ok=True)
-            # Novo nome: documento_usuario_empresa.ext
+            # Buscar nome da empresa via SQL
+            empresa_info = buscar_empresa_por_cnpj(cnpj)
+            razao_social = empresa_info["razao_social"] if empresa_info else empresa_usuario
+            # Novo nome: documento_usuario_razao_social.ext
             ext = Path(nome).suffix
-            nome_final = f"{Path(nome).stem}_{usuario}_{empresa_usuario}{ext}"
+            nome_final = f"{Path(nome).stem}_{usuario}_{razao_social}{ext}"
             caminho = pasta_destino / nome_final
             with open(caminho, "wb") as f:
                 f.write(arq.read())
-            # Buscar nome da empresa via SQL
-            empresa_info = buscar_empresa_por_cnpj(cnpj)
-            nome_empresa = empresa_info["razao_social"] if empresa_info else cnpj
             # Registrar no banco
             info_doc = {
                 "nome": nome_final,
                 "caminho": str(caminho),
-                "empresa": nome_empresa,
+                "empresa": razao_social,
                 "cnpj": cnpj,
                 "banco": banco,
                 "ano": ano,

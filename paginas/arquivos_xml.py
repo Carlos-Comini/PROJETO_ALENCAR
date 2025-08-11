@@ -50,7 +50,24 @@ def exibir():
             with open(temp_path, "wb") as f:
                 f.write(file.read())
             info = parse_xml(temp_path)
-            cnpj = info["CNPJ_Destinatario"] or info["CNPJ_Emitente"] or "geral"
+            cnpj_emit = info["CNPJ_Emitente"]
+            cnpj_dest = info["CNPJ_Destinatario"]
+            # Verifica se o CNPJ do emitente ou destinatário está cadastrado
+            from funcoes_compartilhadas.empresas_sql import listar_empresas
+            empresas_cadastradas = [e["cnpj"] for e in listar_empresas()]
+            tipo_xml = ""
+            if cnpj_emit in empresas_cadastradas:
+                tipo_xml = "saida"
+                cnpj = cnpj_emit
+            elif cnpj_dest in empresas_cadastradas:
+                tipo_xml = "entrada"
+                cnpj = cnpj_dest
+            else:
+                st.warning(
+                    f"O arquivo '{file.name}' não foi aceito porque o CNPJ do emitente ou destinatário não está cadastrado no sistema. "
+                    "Por favor, cadastre a empresa antes de enviar este XML."
+                )
+                continue
             empresa_info = buscar_empresa_por_cnpj(cnpj)
             nome_empresa = empresa_info["razao_social"] if empresa_info else cnpj
             hoje = datetime.today().strftime("%Y_%m_%d")
@@ -67,11 +84,11 @@ def exibir():
                 "banco": "XML",
                 "ano": hoje.split('_')[0],
                 "mes": hoje.split('_')[1],
-                "tipo": "xml",
+                "tipo": f"xml_{tipo_xml}",
                 "data_upload": datetime.now().strftime("%Y-%m-%d %H:%M:%S")
             }
             registrar_documento(info_doc)
-            st.info("Arquivo XML salvo e registrado!")
+            st.info(f"Arquivo XML salvo e registrado como XML de {tipo_xml}!")
         st.success(f"{len(uploaded)} arquivo(s) salvo(s) com sucesso!")
 
     st.subheader("📁 Arquivos Recebidos")
