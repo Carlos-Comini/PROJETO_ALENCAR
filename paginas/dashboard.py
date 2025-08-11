@@ -11,6 +11,7 @@ COR_BG = "#181a20"  # fundo
 COR_TXT = "#FFFFFF"  # texto
 
 def exibir():
+	st.info('DASHBOARD NOVO CARREGADO - TESTE')
 	st.markdown(f"""
 		<style>
 		@import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@600;700&display=swap');
