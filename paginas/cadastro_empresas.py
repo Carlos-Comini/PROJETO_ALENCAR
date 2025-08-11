@@ -16,6 +16,7 @@ def exibir():
     set_page_title("Cadastro de Empresas")
     st.header("Cadastro de Empresas Clientes")
 
+
     with st.form("form_empresa"):
         cnpj = st.text_input("CNPJ")
         buscar = st.form_submit_button("Buscar Razão Social")
@@ -39,3 +40,15 @@ def exibir():
                 st.session_state["razao_social"] = ""
             else:
                 st.error("Preencha todos os campos.")
+
+    # Tabela de empresas cadastradas
+    st.subheader("Empresas já cadastradas")
+    try:
+        from funcoes_compartilhadas.empresas_sql import listar_empresas, criar_tabela_empresas
+        criar_tabela_empresas()
+        empresas = listar_empresas()
+        import pandas as pd
+        df_empresas = pd.DataFrame(empresas)
+        st.dataframe(df_empresas, use_container_width=True)
+    except Exception as e:
+        st.warning(f"Não foi possível carregar empresas: {e}")
