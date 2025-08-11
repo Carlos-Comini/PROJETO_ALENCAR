@@ -49,6 +49,8 @@ def exibir():
         empresas = listar_empresas()
         import pandas as pd
         df_empresas = pd.DataFrame(empresas)
+        if not df_empresas.empty:
+            df_empresas = df_empresas[["cnpj", "razao_social"]]
         st.dataframe(df_empresas, use_container_width=True)
     except Exception as e:
         st.warning(f"Não foi possível carregar empresas: {e}")

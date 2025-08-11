@@ -74,11 +74,21 @@ def exibir():
                 inserir_usuario(nome, email, senha, "Cliente", empresa=empresa, permissoes=permissoes)
                 st.success("Usuário de cliente cadastrado.")
 
-    # Exibir tabela de usuários cadastrados
+    # Exibir tabelas separadas de usuários cadastrados
+    st.markdown("---")
     st.subheader("Usuários cadastrados")
+    opcao_tabela = st.radio("Visualizar usuários do tipo:", ["Escritório", "Cliente"], horizontal=True)
     usuarios = listar_usuarios()
+    import pandas as pd
     if usuarios:
-        import pandas as pd
-        st.dataframe(pd.DataFrame(usuarios))
+        df_usuarios = pd.DataFrame(usuarios)
+        if opcao_tabela == "Escritório":
+            df_filtrados = df_usuarios[df_usuarios["tipo"].str.lower() == "escritorio"]
+        else:
+            df_filtrados = df_usuarios[df_usuarios["tipo"].str.lower() == "cliente"]
+        if not df_filtrados.empty:
+            st.dataframe(df_filtrados, use_container_width=True)
+        else:
+            st.info(f"Nenhum usuário do tipo {opcao_tabela} cadastrado ainda.")
     else:
         st.info("Nenhum usuário cadastrado ainda.")
