@@ -89,7 +89,7 @@ def exibir():
                 st.write(f"📌 Empresa: {doc['empresa']}")
                 st.write(f"📅 Data: {doc['ano']}/{doc['mes']}")
                 with open(doc["caminho"], "rb") as f:
-                    st.download_button("⬇️ Baixar XML", f, file_name=doc["nome"])
+                    st.download_button("⬇️ Baixar XML", f, file_name=doc["nome"], key=f"download_{doc['id']}")
                 if st.button(f"🗑️ Excluir XML {doc['id']}", key=f"delxml_{doc['id']}"):
                     if st.session_state.get(f"confirm_delxml_{doc['id']}") != True:
                         st.warning("Tem certeza que deseja excluir este XML?")
