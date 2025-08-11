@@ -79,16 +79,5 @@ def salvar_usuario(nome, email, senha, tipo, empresa=None, permissoes=None):
 def listar_empresas():
     planilha = conectar_google_sheets()
     aba = planilha.worksheet("Empresas")
-    return aba.get_all_records()
+    ## Todas as funções de Google Sheets removidas. Utilize apenas SQL para persistência e leitura de dados.
 
-
-def listar_usuarios():
-    planilha = conectar_google_sheets()
-    aba = planilha.worksheet("Usuarios")
-    return aba.get_all_records()
-
-
-def listar_cnpjs_xml():
-    if not os.path.exists(XML_BASE):
-        return []
-    return sorted([d for d in os.listdir(XML_BASE) if os.path.isdir(os.path.join(XML_BASE, d))])
