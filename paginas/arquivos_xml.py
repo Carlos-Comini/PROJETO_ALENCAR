@@ -107,6 +107,7 @@ def exibir():
                                 os.remove(doc['caminho'])
                             st.success("XML excluído com sucesso!")
                             st.session_state[f"confirm_delxml_{doc['id']}"] = False
+                            st.experimental_rerun()
                         except Exception as e:
                             st.error(f"Erro ao excluir: {e}")
     else:
