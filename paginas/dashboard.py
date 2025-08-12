@@ -55,4 +55,8 @@ def exibir():
     st.subheader("📋 Tabela de Documentos Filtrados")
     st.dataframe(df_filtrado, use_container_width=True)
 
-    st.download_button("⬇️ Exportar dados filtrados para Excel", df_filtrado.to_excel(index=False), file_name="dashboard_documentos.xlsx")
+    import io
+    buffer = io.BytesIO()
+    df_filtrado.to_excel(buffer, index=False)
+    buffer.seek(0)
+    st.download_button("⬇️ Exportar dados filtrados para Excel", buffer, file_name="dashboard_documentos.xlsx")
