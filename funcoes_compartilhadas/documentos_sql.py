@@ -1,3 +1,9 @@
+def atualizar_data_documento(doc_id: int, data_documento: str):
+    conn = conectar()
+    cursor = conn.cursor()
+    cursor.execute("UPDATE documentos SET data_documento = ? WHERE id = ?", (data_documento, doc_id))
+    conn.commit()
+    conn.close()
 def deletar_documento(doc_id: int):
     conn = conectar()
     cursor = conn.cursor()
@@ -32,7 +38,8 @@ def criar_tabela_documentos():
             tipo_nota TEXT,
             usuario TEXT,
             razao_social_usuario TEXT,
-            data_upload TEXT
+            data_upload TEXT,
+            data_documento TEXT
         )
     ''')
     conn.commit()
@@ -42,12 +49,13 @@ def registrar_documento(info: Dict):
     conn = conectar()
     cursor = conn.cursor()
     cursor.execute('''
-        INSERT INTO documentos (nome, caminho, empresa, cnpj, banco, ano, mes, tipo, tipo_nota, usuario, razao_social_usuario, data_upload)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        INSERT INTO documentos (nome, caminho, empresa, cnpj, banco, ano, mes, tipo, tipo_nota, usuario, razao_social_usuario, data_upload, data_documento)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     ''', (
         info['nome'], info['caminho'], info['empresa'], info['cnpj'], info['banco'],
         info['ano'], info['mes'], info['tipo'], info.get('tipo_nota', 'Desconhecido'),
-        info.get('usuario', 'N/A'), info.get('razao_social_usuario', 'N/A'), info['data_upload']
+        info.get('usuario', 'N/A'), info.get('razao_social_usuario', 'N/A'), info['data_upload'],
+        info.get('data_documento', None)
     ))
     conn.commit()
     conn.close()

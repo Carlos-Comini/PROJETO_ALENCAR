@@ -32,12 +32,15 @@ def parse_xml(file_path):
                     data_emissao = dhEmi.text[:10]
         elif root_tag.lower() in ["compnfse", "nfse"]:
             # NFS-e
-            infNfse = root.find(".//InfNfse")
-            if infNfse is not None:
-                numero = infNfse.find("Numero").text if infNfse.find("Numero") is not None else "—"
-                data_tag = infNfse.find("DataEmissao")
-                if data_tag is not None and data_tag.text:
-                    data_emissao = data_tag.text[:10]
+            numero = "—"
+            data_emissao = "—"
+            # Busca número e data em qualquer lugar ignorando namespace
+            for elem in root.iter():
+                localname = elem.tag.split('}')[-1] if '}' in elem.tag else elem.tag
+                if localname.lower() == "numero" and numero == "—" and elem.text:
+                    numero = elem.text
+                if localname.lower() == "dataemissao" and data_emissao == "—" and elem.text:
+                    data_emissao = elem.text[:10]
         elif root_tag.lower() in ["cteproc", "cte"]:
             # CT-e
             ide_cte = root.find(".//ide")
