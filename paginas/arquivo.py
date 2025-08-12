@@ -92,8 +92,9 @@ def exibir():
 
     if arquivos:
         from funcoes_compartilhadas.empresas_sql import buscar_empresa_por_cnpj
-        usuario = st.session_state.get("usuario", {}).get("Usuario", "anonimo")
-        empresa_usuario = st.session_state.get("usuario", {}).get("Empresa", "desconhecida")
+        dados_usuario = st.session_state.get("dados_usuario", {})
+        usuario_nome = dados_usuario.get("nome", "anonimo")
+        usuario_razao = dados_usuario.get("razao_social", "desconhecida")
         for arq in arquivos:
             nome = arq.name
             cnpj, banco, ano, mes = extrair_info(nome)
@@ -101,10 +102,10 @@ def exibir():
             pasta_destino.mkdir(parents=True, exist_ok=True)
             # Buscar nome da empresa via SQL
             empresa_info = buscar_empresa_por_cnpj(cnpj)
-            razao_social = empresa_info["razao_social"] if empresa_info else empresa_usuario
+            razao_social = empresa_info["razao_social"] if empresa_info else usuario_razao
             # Novo nome: documento_usuario_razao_social.ext
             ext = Path(nome).suffix
-            nome_final = f"{Path(nome).stem}_{usuario}_{razao_social}{ext}"
+            nome_final = f"{Path(nome).stem}_{usuario_nome}_{razao_social}{ext}"
             caminho = pasta_destino / nome_final
             with open(caminho, "wb") as f:
                 f.write(arq.read())
@@ -117,8 +118,8 @@ def exibir():
                 "banco": banco,
                 "ano": ano,
                 "mes": mes,
-                "usuario": usuario,
-                "empresa_usuario": empresa_usuario,
+                "usuario": usuario_nome,
+                "razao_social_usuario": usuario_razao,
                 "tipo": mimetypes.guess_type(caminho)[0] or "desconhecido",
                 "data_upload": datetime.now().strftime("%Y-%m-%d %H:%M:%S")
             }
@@ -140,11 +141,11 @@ def exibir():
         with st.expander(f'{doc["nome"]} — {doc["banco"]} {doc["mes"]}/{doc["ano"]} — {doc["empresa"]}'):
             st.write(f"📌 Empresa: {doc['empresa']}")
             st.write(f"🏦 Banco: {doc['banco']}")
-            # Exibe usuário e CNPJ do usuário logado
-            nome_usuario = dados_usuario.get('nome', doc.get('usuario', 'N/A'))
-            cnpj_usuario = dados_usuario.get('cnpj', doc.get('empresa_usuario', 'N/A'))
+            # Exibe usuário e razão social do usuário logado
+            nome_usuario = doc.get('usuario', 'N/A')
+            razao_usuario = doc.get('razao_social_usuario', 'N/A')
             st.write(f"👤 Usuário: {nome_usuario}")
-            st.write(f"🏢 CNPJ: {cnpj_usuario}")
+            st.write(f"🏢 Razão Social: {razao_usuario}")
             st.write(f"📅 Data: {doc['mes']}/{doc['ano']}")
             with open(doc["caminho"], "rb") as f:
                 st.download_button("⬇️ Baixar", f, file_name=doc["nome"], key=f"download_{doc['id']}")
