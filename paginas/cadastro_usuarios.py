@@ -47,9 +47,9 @@ def exibir():
             senha = st.text_input("Senha", type="password")
 
             if tipo == "Escritório":
-                permitir_cadastros = st.checkbox("Permitir Cadastros")
-                permitir_ver_arquivo = st.checkbox("Permitir Ver Arquivo")
-                permitir_ver_xml = st.checkbox("Permitir Ver XML")
+                permitir_cadastros = st.checkbox("Permitir Cadastros", key="cadastrar_escritorio")
+                permitir_ver_arquivo = st.checkbox("Permitir Ver Arquivo", key="ver_arquivo_escritorio")
+                permitir_ver_xml = st.checkbox("Permitir Ver XML", key="ver_xml_escritorio")
 
                 if st.form_submit_button("Salvar"):
                     from funcoes_compartilhadas.conversa_banco import hash_senha
@@ -77,8 +77,8 @@ def exibir():
                     else:
                         empresas = empresas_df.iloc[:,0].astype(str).tolist()
                 empresa = st.selectbox("Empresa", empresas)
-            permitir_ver_arquivo = st.checkbox("Permitir Ver Arquivo")
-            permitir_ver_xml = st.checkbox("Permitir Ver XML")
+                permitir_ver_arquivo = st.checkbox("Permitir Ver Arquivo", key="ver_arquivo_cliente")
+                permitir_ver_xml = st.checkbox("Permitir Ver XML", key="ver_xml_cliente")
 
             if st.form_submit_button("Salvar"):
                 from funcoes_compartilhadas.conversa_banco import hash_senha
