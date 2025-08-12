@@ -27,6 +27,8 @@ def criar_tabela_documentos():
             mes TEXT,
             tipo TEXT,
             tipo_nota TEXT,
+            usuario TEXT,
+            razao_social_usuario TEXT,
             data_upload TEXT
         )
     ''')
@@ -37,11 +39,12 @@ def registrar_documento(info: Dict):
     conn = conectar()
     cursor = conn.cursor()
     cursor.execute('''
-        INSERT INTO documentos (nome, caminho, empresa, cnpj, banco, ano, mes, tipo, tipo_nota, data_upload)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        INSERT INTO documentos (nome, caminho, empresa, cnpj, banco, ano, mes, tipo, tipo_nota, usuario, razao_social_usuario, data_upload)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     ''', (
         info['nome'], info['caminho'], info['empresa'], info['cnpj'], info['banco'],
-        info['ano'], info['mes'], info['tipo'], info.get('tipo_nota', 'Desconhecido'), info['data_upload']
+        info['ano'], info['mes'], info['tipo'], info.get('tipo_nota', 'Desconhecido'),
+        info.get('usuario', 'N/A'), info.get('razao_social_usuario', 'N/A'), info['data_upload']
     ))
     conn.commit()
     conn.close()
