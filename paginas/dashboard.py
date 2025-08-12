@@ -1,12 +1,9 @@
 
 
-    import streamlit as st
-    import pandas as pd
-    import plotly.express as px
-    from funcoes_compartilhadas.documentos_sql import listar_documentos
-
-    st.title("📊 Dashboard de Documentos Contábeis")
-
+import streamlit as st
+import pandas as pd
+import plotly.express as px
+from funcoes_compartilhadas.documentos_sql import listar_documentos
     # Carrega dados do banco
     registros = listar_documentos()
     df = pd.DataFrame(registros)
