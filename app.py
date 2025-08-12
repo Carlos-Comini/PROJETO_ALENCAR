@@ -78,6 +78,7 @@ def processa_login_por_url():
             st.session_state.usuario_autenticado = True
             st.session_state.tipo_usuario = tipo
             st.session_state.dados_usuario = dados
+            st.session_state.menu = None
             st.rerun()
         else:
             st.error("❌ Login inválido.")
