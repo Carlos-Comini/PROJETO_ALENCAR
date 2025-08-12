@@ -92,6 +92,8 @@ def exibir():
                     "banco": "XML",
                     "ano": hoje.split('_')[0],
                     "mes": hoje.split('_')[1],
+                    "tipo_xml": tipo_xml,
+                    "tipo_nota": tipo_nota if 'tipo_nota' in locals() else '',
                     "tipo": f"xml_{tipo_xml}",
                     "data_upload": datetime.now().strftime("%Y-%m-%d %H:%M:%S")
                 }
@@ -112,11 +114,10 @@ def exibir():
         for doc in docs_xml:
             with st.expander(f'{doc["nome"]} — {doc["empresa"]} {doc["ano"]}/{doc["mes"]}'):
                 st.write(f"📌 Empresa: {doc['empresa']}")
-                # Exibe tipo de XML e se é entrada ou saída
-                tipo_xml = doc.get('tipo', '').replace('xml_', '').capitalize() if doc.get('tipo') else 'Desconhecido'
-                st.write(f"📄 Tipo: {tipo_xml}")
-                entrada_saida = 'Entrada' if 'entrada' in doc.get('tipo', '') else ('Saída' if 'saida' in doc.get('tipo', '') else 'Desconhecido')
-                st.write(f"🔄 Entrada/Saída: {entrada_saida}")
+                tipo_xml = doc.get('tipo_xml', doc.get('tipo', '')).upper() if doc.get('tipo_xml', doc.get('tipo', '')) else 'Desconhecido'
+                tipo_nota = doc.get('tipo_nota', '')
+                st.write(f"📄 Tipo de XML: {tipo_xml}")
+                st.write(f"📝 Tipo de Nota: {tipo_nota if tipo_nota else 'Desconhecido'}")
                 st.write(f"📅 Data: {doc['ano']}/{doc['mes']}")
                 with open(doc["caminho"], "rb") as f:
                     st.download_button("⬇️ Baixar XML", f, file_name=doc["nome"], key=f"download_{doc['id']}")
