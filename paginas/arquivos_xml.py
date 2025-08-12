@@ -55,12 +55,14 @@ def exibir():
             # Verifica se o CNPJ do emitente ou destinatário está cadastrado
             from funcoes_compartilhadas.empresas_sql import listar_empresas
             empresas_cadastradas = [e["cnpj"] for e in listar_empresas()]
-            tipo_xml = ""
+            # Definir CNPJ e tipo de nota antes de extrair tipo_xml
+            tipo_nota = 'Desconhecido'
+            cnpj = None
             if cnpj_emit in empresas_cadastradas:
-                tipo_xml = "saida"
+                tipo_nota = 'Saída'
                 cnpj = cnpj_emit
             elif cnpj_dest in empresas_cadastradas:
-                tipo_xml = "entrada"
+                tipo_nota = 'Entrada'
                 cnpj = cnpj_dest
             else:
                 st.warning(
@@ -68,6 +70,25 @@ def exibir():
                     "Por favor, cadastre a empresa antes de enviar este XML."
                 )
                 continue
+
+            # Extrai tipo de XML (NF-e, CT-e, etc) pelo campo <mod>
+            try:
+                tree = ET.parse(caminho)
+                root = tree.getroot()
+                ns = {'nfe': 'http://www.portalfiscal.inf.br/nfe'}
+                mod = root.find('.//nfe:ide/nfe:mod', ns)
+                mod_val = mod.text if mod is not None else ''
+                if mod_val == '55':
+                    tipo_xml = 'NF-e'
+                elif mod_val == '65':
+                    tipo_xml = 'NFC-e'
+                elif mod_val == '57':
+                    tipo_xml = 'CT-e'
+                else:
+                    tipo_xml = mod_val or 'Desconhecido'
+            except Exception:
+                tipo_xml = 'Desconhecido'
+
             empresa_info = buscar_empresa_por_cnpj(cnpj)
             nome_empresa = empresa_info["razao_social"] if empresa_info else cnpj
             hoje = datetime.today().strftime("%Y_%m_%d")
@@ -93,12 +114,11 @@ def exibir():
                     "ano": hoje.split('_')[0],
                     "mes": hoje.split('_')[1],
                     "tipo_xml": tipo_xml,
-                    "tipo_nota": tipo_nota if 'tipo_nota' in locals() else '',
-                    "tipo": f"xml_{tipo_xml}",
+                    "tipo_nota": tipo_nota,
                     "data_upload": datetime.now().strftime("%Y-%m-%d %H:%M:%S")
                 }
                 registrar_documento(info_doc)
-                st.info(f"Arquivo XML salvo e registrado como XML de {tipo_xml}!")
+                st.info(f"Arquivo XML salvo e registrado como {tipo_xml} - {tipo_nota}!")
         st.success(f"{len(uploaded)} arquivo(s) salvo(s) com sucesso!")
 
     st.subheader("📁 Arquivos Recebidos")
@@ -114,10 +134,10 @@ def exibir():
         for doc in docs_xml:
             with st.expander(f'{doc["nome"]} — {doc["empresa"]} {doc["ano"]}/{doc["mes"]}'):
                 st.write(f"📌 Empresa: {doc['empresa']}")
-                tipo_xml = doc.get('tipo_xml', doc.get('tipo', '')).upper() if doc.get('tipo_xml', doc.get('tipo', '')) else 'Desconhecido'
-                tipo_nota = doc.get('tipo_nota', '')
+                tipo_xml = doc.get('tipo_xml', 'Desconhecido')
+                tipo_nota = doc.get('tipo_nota', 'Desconhecido')
                 st.write(f"📄 Tipo de XML: {tipo_xml}")
-                st.write(f"📝 Tipo de Nota: {tipo_nota if tipo_nota else 'Desconhecido'}")
+                st.write(f"📝 Tipo de Nota: {tipo_nota}")
                 st.write(f"📅 Data: {doc['ano']}/{doc['mes']}")
                 with open(doc["caminho"], "rb") as f:
                     st.download_button("⬇️ Baixar XML", f, file_name=doc["nome"], key=f"download_{doc['id']}")
