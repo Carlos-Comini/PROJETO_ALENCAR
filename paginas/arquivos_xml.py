@@ -123,11 +123,23 @@ def exibir():
                         cnpjs_encontrados = re.findall(r'\d{14}', xml_text)
                         # Remove duplicados
                         cnpjs_encontrados = list(dict.fromkeys(cnpjs_encontrados))
-                        # Se houver mais de um, assume o primeiro como emitente e o segundo como destinatário
-                        if len(cnpjs_encontrados) > 0:
-                            cnpj_emit = cnpjs_encontrados[0]
-                        if len(cnpjs_encontrados) > 1:
-                            cnpj_dest = cnpjs_encontrados[1]
+                        # Se houver CNPJs, verifica se algum está cadastrado
+                        cnpj_emit = None
+                        cnpj_dest = None
+                        tipo_nota = 'Desconhecido'
+                        cnpj = None
+                        for idx, cnpj_xml in enumerate(cnpjs_encontrados):
+                            cnpj_xml_norm = normaliza_cnpj(cnpj_xml)
+                            if cnpj_xml_norm in empresas_cadastradas:
+                                if idx == 0:
+                                    tipo_nota = 'Saída'
+                                    cnpj_emit = cnpj_xml
+                                    cnpj = cnpj_xml_norm
+                                else:
+                                    tipo_nota = 'Entrada'
+                                    cnpj_dest = cnpj_xml
+                                    cnpj = cnpj_xml_norm
+                                break
                     except Exception:
                         pass
                 # Se não encontrou pelo texto, tenta buscar CNPJ por tags (fallback)
