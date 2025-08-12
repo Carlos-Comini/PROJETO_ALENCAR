@@ -51,7 +51,7 @@ def exibir():
                 permitir_ver_arquivo = st.checkbox("Permitir Ver Arquivo", key="ver_arquivo_escritorio")
                 permitir_ver_xml = st.checkbox("Permitir Ver XML", key="ver_xml_escritorio")
 
-                if st.form_submit_button("Salvar"):
+                if st.form_submit_button("Salvar", key="salvar_escritorio"):
                     from funcoes_compartilhadas.conversa_banco import hash_senha
                     senha_hash = hash_senha(senha)
                     permissoes = {
@@ -80,7 +80,7 @@ def exibir():
                 permitir_ver_arquivo = st.checkbox("Permitir Ver Arquivo", key="ver_arquivo_cliente")
                 permitir_ver_xml = st.checkbox("Permitir Ver XML", key="ver_xml_cliente")
 
-            if st.form_submit_button("Salvar"):
+            if st.form_submit_button("Salvar", key="salvar_cliente"):
                 from funcoes_compartilhadas.conversa_banco import hash_senha
                 senha_hash = hash_senha(senha)
                 permissoes = {
