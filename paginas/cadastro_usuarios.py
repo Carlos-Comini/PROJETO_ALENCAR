@@ -95,17 +95,45 @@ def exibir():
         opcao_tabela = st.radio("Visualizar usuários do tipo:", ["Escritório", "Cliente"], horizontal=True)
         usuarios = listar_usuarios()
         import pandas as pd
-        if usuarios:
-            df_usuarios = pd.DataFrame(usuarios)
-            if opcao_tabela == "Escritório":
-                df_filtrados = df_usuarios[df_usuarios["tipo"].str.lower() == "escritorio"]
+        with st.form("form_usuario"):
+            nome = st.text_input("Nome")
+            email = st.text_input("Email")
+            senha = st.text_input("Senha", type="password")
+            if tipo == "Escritório":
+                permitir_cadastros = st.checkbox("Permitir Cadastros", key="cadastrar_escritorio")
+                permitir_ver_arquivo = st.checkbox("Permitir Ver Arquivo", key="ver_arquivo_escritorio")
+                permitir_ver_xml = st.checkbox("Permitir Ver XML", key="ver_xml_escritorio")
             else:
-                df_filtrados = df_usuarios[df_usuarios["tipo"].str.lower() == "cliente"]
-            if not df_filtrados.empty:
-                # Remove colunas 'id' e 'senha' da exibição
-                colunas_ocultas = [col for col in ['id', 'senha'] if col in df_filtrados.columns]
-                st.dataframe(df_filtrados.drop(columns=colunas_ocultas), use_container_width=True)
-            else:
-                st.info(f"Nenhum usuário do tipo {opcao_tabela} cadastrado ainda.")
-        else:
-            st.info("Nenhum usuário cadastrado ainda.")
+                import pandas as pd
+                from funcoes_compartilhadas.empresas_sql import listar_empresas
+                empresas_df = pd.DataFrame(listar_empresas())
+                empresas = []
+                if not empresas_df.empty:
+                    if "nome_empresa" in empresas_df.columns:
+                        empresas = empresas_df["nome_empresa"].tolist()
+                    elif "razao_social" in empresas_df.columns:
+                        empresas = empresas_df["razao_social"].tolist()
+                    else:
+                        empresas = empresas_df.iloc[:,0].astype(str).tolist()
+                empresa = st.selectbox("Empresa", empresas)
+                permitir_ver_arquivo = st.checkbox("Permitir Ver Arquivo", key="ver_arquivo_cliente")
+                permitir_ver_xml = st.checkbox("Permitir Ver XML", key="ver_xml_cliente")
+            submit = st.form_submit_button("Salvar", key="salvar_usuario")
+            if submit:
+                from funcoes_compartilhadas.conversa_banco import hash_senha
+                senha_hash = hash_senha(senha)
+                if tipo == "Escritório":
+                    permissoes = {
+                        "cadastrar": permitir_cadastros,
+                        "ver_arquivo": permitir_ver_arquivo,
+                        "ver_xml": permitir_ver_xml
+                    }
+                    inserir_usuario(nome, email, senha_hash, "Escritorio", permissoes=permissoes)
+                    st.success("Usuário do escritório cadastrado.")
+                else:
+                    permissoes = {
+                        "ver_arquivo": permitir_ver_arquivo,
+                        "ver_xml": permitir_ver_xml
+                    }
+                    inserir_usuario(nome, email, senha_hash, "Cliente", empresa=empresa, permissoes=permissoes)
+                    st.success("Usuário de cliente cadastrado.")
