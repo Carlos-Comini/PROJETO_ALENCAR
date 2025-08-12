@@ -36,34 +36,29 @@ def parse_xml(file_path):
         return {"Número": "Erro", "Data": "Erro", "CNPJ_Emitente": "Erro", "CNPJ_Destinatario": "Erro", "Valor": "Erro"}
 
 def exibir():
-    from funcoes_compartilhadas.empresas_sql import criar_tabela_empresas
+    from funcoes_compartilhadas.empresas_sql import criar_tabela_empresas, listar_empresas
     criar_tabela_empresas()
     criar_tabela_documentos()
     st.title("📂 Gestão de Arquivos XML")
     st.subheader("📤 Enviar XML manualmente")
     uploaded = st.file_uploader("Escolha um ou mais arquivos XML", type=["xml"], accept_multiple_files=True)
 
+    def normaliza_cnpj(cnpj):
+        if not cnpj:
+            return ''
+        return ''.join(filter(str.isdigit, cnpj))
+    empresas_cadastradas = [normaliza_cnpj(e["cnpj"]) for e in listar_empresas()]
+
     if uploaded:
         criar_tabela_documentos()
         for file in uploaded:
             temp_path = XML_BASE / "temp.xml"
-            with open(temp_path, "wb") as f:
-                f.write(file.read())
-            info = parse_xml(temp_path)
-            cnpj_emit = info["CNPJ_Emitente"]
-            cnpj_dest = info["CNPJ_Destinatario"]
-            # Verifica se o CNPJ do emitente ou destinatário está cadastrado
-            from funcoes_compartilhadas.empresas_sql import listar_empresas
-            def normaliza_cnpj(cnpj):
-                if not cnpj:
-                    return ''
-                return ''.join(filter(str.isdigit, cnpj))
-            empresas_cadastradas = [normaliza_cnpj(e["cnpj"]) for e in listar_empresas()]
-            # Definir CNPJ e tipo de nota conforme cadastro
-            tipo_nota = 'Desconhecido'
-            cnpj = None
-            tipo_xml = 'Desconhecido'
             try:
+                # Busca modelo fiscal por tag raiz, campo <mod>, tags internas ou texto
+                tipo_xml = 'Desconhecido'
+                cnpj_emit = None
+                cnpj_dest = None
+                # Busca modelo fiscal (mantém lógica anterior)
                 tree = ET.parse(temp_path)
                 root = tree.getroot()
                 def find_tag(root, tag):
@@ -72,12 +67,8 @@ def exibir():
                         if localname == tag:
                             return elem.text
                     return None
-                # Detecta NFS-e pelo nome da tag raiz ou namespace
                 root_localname = root.tag.split('}')[-1] if '}' in root.tag else root.tag
                 root_ns = root.tag.split('}')[0][1:] if '}' in root.tag else ''
-                # Detecta modelo fiscal por tag raiz, campo <mod> ou tags internas
-                tipo_xml = 'Desconhecido'
-                # Tag raiz
                 if root_localname.lower().startswith('compnfse') or 'nfse.xsd' in root_ns:
                     tipo_xml = 'NFS-e'
                 elif root_localname.lower().startswith('nfeproc') or root_localname.lower() == 'nfe':
@@ -86,7 +77,6 @@ def exibir():
                     tipo_xml = 'CT-e'
                 elif root_localname.lower().startswith('mdfeproc') or root_localname.lower() == 'mdfe':
                     tipo_xml = 'MDF-e'
-                # Campo <mod>
                 if tipo_xml == 'Desconhecido':
                     mod_val = find_tag(root, 'mod')
                     if mod_val == '55':
@@ -99,7 +89,6 @@ def exibir():
                         tipo_xml = 'MDF-e'
                     elif mod_val:
                         tipo_xml = mod_val
-                # Busca por tags internas que indicam modelo
                 if tipo_xml == 'Desconhecido':
                     for elem in root.iter():
                         localname = elem.tag.split('}')[-1] if '}' in elem.tag else elem.tag
@@ -115,7 +104,6 @@ def exibir():
                         elif localname.lower() == 'mdfe':
                             tipo_xml = 'MDF-e'
                             break
-                # Busca de texto simples no XML para identificar modelo
                 if tipo_xml == 'Desconhecido':
                     try:
                         with open(temp_path, 'r', encoding='utf-8') as f:
@@ -130,13 +118,38 @@ def exibir():
                             tipo_xml = 'NFS-e'
                         elif 'mdfe' in xml_text:
                             tipo_xml = 'MDF-e'
+                        # Busca todos os CNPJs no texto
+                        import re
+                        cnpjs_encontrados = re.findall(r'\d{14}', xml_text)
+                        # Remove duplicados
+                        cnpjs_encontrados = list(dict.fromkeys(cnpjs_encontrados))
+                        # Se houver mais de um, assume o primeiro como emitente e o segundo como destinatário
+                        if len(cnpjs_encontrados) > 0:
+                            cnpj_emit = cnpjs_encontrados[0]
+                        if len(cnpjs_encontrados) > 1:
+                            cnpj_dest = cnpjs_encontrados[1]
                     except Exception:
                         pass
-                # Busca CNPJ do emitente em várias tags possíveis
-                cnpj_emit = None
-                for elem in root.iter():
-                    localname = elem.tag.split('}')[-1] if '}' in elem.tag else elem.tag
-                    if localname in ['PrestadorServico', 'emit', 'prest']:
+                # Se não encontrou pelo texto, tenta buscar CNPJ por tags (fallback)
+                if not cnpj_emit or not cnpj_dest:
+                    for elem in root.iter():
+                        localname = elem.tag.split('}')[-1] if '}' in elem.tag else elem.tag
+                        if not cnpj_emit and localname in ['PrestadorServico', 'emit', 'prest']:
+                            for subelem in elem.iter():
+                                sublocal = subelem.tag.split('}')[-1] if '}' in subelem.tag else subelem.tag
+                                if sublocal in ['Cnpj', 'CNPJ']:
+                                    cnpj_emit = subelem.text
+                                    break
+                            if cnpj_emit:
+                                break
+                        if not cnpj_dest and localname in ['Tomador', 'dest', 'receb', 'toma', 'rem', 'exped']:
+                            for subelem in elem.iter():
+                                sublocal = subelem.tag.split('}')[-1] if '}' in subelem.tag else subelem.tag
+                                if sublocal in ['Cnpj', 'CNPJ']:
+                                    cnpj_dest = subelem.text
+                                    break
+                            if cnpj_dest:
+                                break
                         for subelem in elem.iter():
                             sublocal = subelem.tag.split('}')[-1] if '}' in subelem.tag else subelem.tag
                             if sublocal in ['Cnpj', 'CNPJ']:
