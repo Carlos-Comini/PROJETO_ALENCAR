@@ -1,3 +1,4 @@
+openpyxl
 pydrive2
 altair==5.5.0
 altgraph==0.17.4
