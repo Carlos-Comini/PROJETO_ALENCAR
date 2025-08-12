@@ -89,8 +89,9 @@ if not st.session_state.usuario_autenticado:
 else:
     aplicar_estilo_padrao()
 
-    # Inicializa o menu na sessão se não existir
-    st.session_state["menu"] = st.session_state.get("menu", "Dashboard")
+    # Inicializa o menu na sessão apenas se não existir
+    if "menu" not in st.session_state:
+        st.session_state["menu"] = None
 
     # Permissões do usuário logado
     dados_usuario = st.session_state.get("dados_usuario", {})
