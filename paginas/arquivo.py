@@ -138,14 +138,14 @@ def exibir():
     from funcoes_compartilhadas.documentos_sql import deletar_documento
     for doc in documentos:
         with st.expander(f'{doc["nome"]} — {doc["banco"]} {doc["mes"]}/{doc["ano"]} — {doc["empresa"]}'):
-                st.write(f"📌 Empresa: {doc['empresa']}")
-                st.write(f"🏦 Banco: {doc['banco']}")
-                # Exibe usuário e CNPJ do usuário logado
-                nome_usuario = dados_usuario.get('nome', doc.get('usuario', 'N/A'))
-                cnpj_usuario = dados_usuario.get('cnpj', doc.get('empresa_usuario', 'N/A'))
-                st.write(f"👤 Usuário: {nome_usuario}")
-                st.write(f"🏢 CNPJ: {cnpj_usuario}")
-                st.write(f"📅 Data: {doc['mes']}/{doc['ano']}")
+            st.write(f"📌 Empresa: {doc['empresa']}")
+            st.write(f"🏦 Banco: {doc['banco']}")
+            # Exibe usuário e CNPJ do usuário logado
+            nome_usuario = dados_usuario.get('nome', doc.get('usuario', 'N/A'))
+            cnpj_usuario = dados_usuario.get('cnpj', doc.get('empresa_usuario', 'N/A'))
+            st.write(f"👤 Usuário: {nome_usuario}")
+            st.write(f"🏢 CNPJ: {cnpj_usuario}")
+            st.write(f"📅 Data: {doc['mes']}/{doc['ano']}")
             with open(doc["caminho"], "rb") as f:
                 st.download_button("⬇️ Baixar", f, file_name=doc["nome"], key=f"download_{doc['id']}")
             if st.button(f"🗑️ Excluir documento {doc['id']}", key=f"del_{doc['id']}"):
