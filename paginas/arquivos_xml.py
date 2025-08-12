@@ -58,20 +58,7 @@ def exibir():
             # Definir CNPJ e tipo de nota conforme cadastro
             tipo_nota = 'Desconhecido'
             cnpj = None
-            if cnpj_emit in empresas_cadastradas:
-                tipo_nota = 'Saída'
-                cnpj = cnpj_emit
-            elif cnpj_dest in empresas_cadastradas:
-                tipo_nota = 'Entrada'
-                cnpj = cnpj_dest
-            else:
-                st.warning(
-                    f"O arquivo '{file.name}' não foi aceito porque o CNPJ do emitente ou destinatário não está cadastrado no sistema. "
-                    "Por favor, cadastre a empresa antes de enviar este XML."
-                )
-                continue
-
-            # Extrai tipo de XML (NF-e, CT-e, etc) ANTES de mover o arquivo
+            tipo_xml = 'Desconhecido'
             try:
                 tree = ET.parse(temp_path)
                 root = tree.getroot()
@@ -86,6 +73,28 @@ def exibir():
                 root_ns = root.tag.split('}')[0][1:] if '}' in root.tag else ''
                 if root_localname.lower().startswith('compnfse') or 'nfse.xsd' in root_ns:
                     tipo_xml = 'NFS-e'
+                    # CNPJ do prestador (emitente)
+                    cnpj_emit = None
+                    for elem in root.iter():
+                        localname = elem.tag.split('}')[-1] if '}' in elem.tag else elem.tag
+                        if localname == 'PrestadorServico':
+                            for subelem in elem.iter():
+                                sublocal = subelem.tag.split('}')[-1] if '}' in subelem.tag else subelem.tag
+                                if sublocal == 'Cnpj':
+                                    cnpj_emit = subelem.text
+                                    break
+                            break
+                    # CNPJ do tomador (destinatário)
+                    cnpj_dest = None
+                    for elem in root.iter():
+                        localname = elem.tag.split('}')[-1] if '}' in elem.tag else elem.tag
+                        if localname == 'Tomador':
+                            for subelem in elem.iter():
+                                sublocal = subelem.tag.split('}')[-1] if '}' in subelem.tag else subelem.tag
+                                if sublocal == 'Cnpj':
+                                    cnpj_dest = subelem.text
+                                    break
+                            break
                 else:
                     mod_val = find_tag(root, 'mod')
                     if mod_val == '55':
@@ -96,8 +105,36 @@ def exibir():
                         tipo_xml = 'CT-e'
                     else:
                         tipo_xml = mod_val or 'Desconhecido'
+                    # CNPJ emitente/destinatário para NF-e, CT-e, etc
+                    cnpj_emit = find_tag(root, 'CNPJ')
+                    cnpj_dest = None
+                    for elem in root.iter():
+                        localname = elem.tag.split('}')[-1] if '}' in elem.tag else elem.tag
+                        if localname == 'dest' or localname == 'receb':
+                            for subelem in elem.iter():
+                                sublocal = subelem.tag.split('}')[-1] if '}' in subelem.tag else subelem.tag
+                                if sublocal == 'CNPJ':
+                                    cnpj_dest = subelem.text
+                                    break
+                            break
             except Exception:
                 tipo_xml = 'Desconhecido'
+                cnpj_emit = None
+                cnpj_dest = None
+
+            # Aceita qualquer tipo reconhecido
+            if cnpj_emit in empresas_cadastradas:
+                tipo_nota = 'Saída'
+                cnpj = cnpj_emit
+            elif cnpj_dest in empresas_cadastradas:
+                tipo_nota = 'Entrada'
+                cnpj = cnpj_dest
+            else:
+                st.warning(
+                    f"O arquivo '{file.name}' não foi aceito porque o CNPJ do emitente ou destinatário não está cadastrado no sistema. "
+                    "Por favor, cadastre a empresa antes de enviar este XML."
+                )
+                continue
 
             empresa_info = buscar_empresa_por_cnpj(cnpj)
             nome_empresa = empresa_info["razao_social"] if empresa_info else cnpj
