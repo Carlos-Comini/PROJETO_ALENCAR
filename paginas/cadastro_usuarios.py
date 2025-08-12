@@ -50,18 +50,7 @@ def exibir():
                 permitir_cadastros = st.checkbox("Permitir Cadastros", key="cadastrar_escritorio")
                 permitir_ver_arquivo = st.checkbox("Permitir Ver Arquivo", key="ver_arquivo_escritorio")
                 permitir_ver_xml = st.checkbox("Permitir Ver XML", key="ver_xml_escritorio")
-
-                if st.form_submit_button("Salvar", key="salvar_escritorio"):
-                    from funcoes_compartilhadas.conversa_banco import hash_senha
-                    senha_hash = hash_senha(senha)
-                    permissoes = {
-                        "cadastrar": permitir_cadastros,
-                        "ver_arquivo": permitir_ver_arquivo,
-                        "ver_xml": permitir_ver_xml
-                    }
-                    inserir_usuario(nome, email, senha_hash, "Escritorio", permissoes=permissoes)
-                    st.success("Usuário do escritório cadastrado.")
-
+            else:
                 empresas = []
                 if not empresas_df.empty:
                     if "nome_empresa" in empresas_df.columns:
@@ -73,16 +62,25 @@ def exibir():
                 empresa = st.selectbox("Empresa", empresas)
                 permitir_ver_arquivo = st.checkbox("Permitir Ver Arquivo", key="ver_arquivo_cliente")
                 permitir_ver_xml = st.checkbox("Permitir Ver XML", key="ver_xml_cliente")
-
-            if st.form_submit_button("Salvar", key="salvar_cliente"):
+            submit = st.form_submit_button("Salvar", key="salvar_usuario")
+            if submit:
                 from funcoes_compartilhadas.conversa_banco import hash_senha
                 senha_hash = hash_senha(senha)
-                permissoes = {
-                    "ver_arquivo": permitir_ver_arquivo,
-                    "ver_xml": permitir_ver_xml
-                }
-                inserir_usuario(nome, email, senha_hash, "Cliente", empresa=empresa, permissoes=permissoes)
-                st.success("Usuário de cliente cadastrado.")
+                if tipo == "Escritório":
+                    permissoes = {
+                        "cadastrar": permitir_cadastros,
+                        "ver_arquivo": permitir_ver_arquivo,
+                        "ver_xml": permitir_ver_xml
+                    }
+                    inserir_usuario(nome, email, senha_hash, "Escritorio", permissoes=permissoes)
+                    st.success("Usuário do escritório cadastrado.")
+                else:
+                    permissoes = {
+                        "ver_arquivo": permitir_ver_arquivo,
+                        "ver_xml": permitir_ver_xml
+                    }
+                    inserir_usuario(nome, email, senha_hash, "Cliente", empresa=empresa, permissoes=permissoes)
+                    st.success("Usuário de cliente cadastrado.")
 
     elif escolha == "Usuários cadastrados":
         st.subheader("Usuários cadastrados")
