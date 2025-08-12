@@ -71,9 +71,9 @@ def exibir():
                 )
                 continue
 
-            # Extrai tipo de XML (NF-e, CT-e, etc) pelo campo <mod>
+            # Extrai tipo de XML (NF-e, CT-e, etc) e tipo de nota ANTES de mover o arquivo
             try:
-                tree = ET.parse(caminho)
+                tree = ET.parse(temp_path)
                 root = tree.getroot()
                 ns = {'nfe': 'http://www.portalfiscal.inf.br/nfe'}
                 mod = root.find('.//nfe:ide/nfe:mod', ns)
@@ -86,8 +86,11 @@ def exibir():
                     tipo_xml = 'CT-e'
                 else:
                     tipo_xml = mod_val or 'Desconhecido'
+                tpNF = root.find('.//nfe:ide/nfe:tpNF', ns)
+                tipo_nota = 'Saída' if tpNF is not None and tpNF.text == '1' else ('Entrada' if tpNF is not None and tpNF.text == '0' else 'Desconhecido')
             except Exception:
                 tipo_xml = 'Desconhecido'
+                tipo_nota = 'Desconhecido'
 
             empresa_info = buscar_empresa_por_cnpj(cnpj)
             nome_empresa = empresa_info["razao_social"] if empresa_info else cnpj
