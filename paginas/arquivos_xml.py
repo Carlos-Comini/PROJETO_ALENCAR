@@ -78,7 +78,9 @@ def exibir():
                 # Busca <mod> e <tpNF> ignorando namespace
                 def find_tag(root, tag):
                     for elem in root.iter():
-                        if elem.tag.endswith(tag):
+                        # Remove namespace se existir
+                        localname = elem.tag.split('}')[-1] if '}' in elem.tag else elem.tag
+                        if localname == tag:
                             return elem.text
                     return None
                 mod_val = find_tag(root, 'mod')
