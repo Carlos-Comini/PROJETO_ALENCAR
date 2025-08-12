@@ -65,25 +65,9 @@ if "dados_usuario" not in st.session_state:
     st.session_state.dados_usuario = {}
 
 def exibir_login_html():
-    st.markdown("<h2 style='text-align:center;'>Login</h2>", unsafe_allow_html=True)
-    email = st.text_input("E-mail")
-    # Campo de senha com olhinho
-    col1, col2 = st.columns([8,1])
-    with col1:
-        senha = st.text_input("Senha", type=st.session_state.get("show_senha", False) and "default" or "password")
-    with col2:
-        if st.button("👁️", key="toggle_senha"):
-            st.session_state["show_senha"] = not st.session_state.get("show_senha", False)
-    if st.button("Entrar", key="login_btn"):
-        if email and senha:
-            sucesso, tipo, dados = autenticar_usuario(email, senha)
-            if sucesso:
-                st.session_state.usuario_autenticado = True
-                st.session_state.tipo_usuario = tipo
-                st.session_state.dados_usuario = dados
-                st.rerun()
-            else:
-                st.error("❌ Login inválido.")
+    with open("index_embutido_streamlit.html", "r", encoding="utf-8") as f:
+        html = f.read()
+    components.html(html, height=900, scrolling=False)
 
 def processa_login_por_url():
     email = st.query_params.get("email")
