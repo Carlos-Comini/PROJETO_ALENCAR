@@ -298,11 +298,11 @@ def exibir():
                 tipo_nota = doc.get('tipo_nota') or 'Desconhecido'
                 st.write(f"📄 Tipo de XML: {tipo_xml}")
                 st.write(f"📝 Tipo de Nota: {tipo_nota}")
-                data_real = doc.get('data_documento', None)
-                if data_real:
+                data_real = doc.get('data_documento')
+                if data_real and data_real not in [None, '', '—', 'Erro']:
                     st.write(f"📅 Data do Documento: {data_real}")
                 else:
-                    st.write(f"📅 Data do Upload: {doc['ano']}/{doc['mes']}")
+                    st.write(f"📅 Data do Documento: Não disponível")
                 with open(doc["caminho"], "rb") as f:
                     st.download_button("⬇️ Baixar XML", f, file_name=doc["nome"], key=f"download_{doc['id']}")
                 if st.button(f"🗑️ Excluir XML {doc['id']}", key=f"delxml_{doc['id']}"):
