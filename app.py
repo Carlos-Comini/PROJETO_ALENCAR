@@ -95,9 +95,9 @@ else:
     # Permissões do usuário logado
     dados_usuario = st.session_state.get("dados_usuario", {})
     tipo_usuario = st.session_state.get("tipo_usuario", "")
-    permitir_cadastros = dados_usuario.get("Permitir_Cadastros", "Não") in ["Sim", 1, True, "1"]
-    permitir_ver_arquivo = dados_usuario.get("Ver_Arquivos", "Não") in ["Sim", 1, True, "1"]
-    permitir_ver_xml = dados_usuario.get("Ver_XML", "Não") in ["Sim", 1, True, "1"]
+    permitir_cadastros = dados_usuario.get("cadastrar", "Não") in ["Sim", 1, True, "1"]
+    permitir_ver_arquivo = dados_usuario.get("ver_arquivo", "Não") in ["Sim", 1, True, "1"]
+    permitir_ver_xml = dados_usuario.get("ver_xml", "Não") in ["Sim", 1, True, "1"]
 
     # Monta menu conforme permissões
     menu_labels = ["Dashboard"]
