@@ -256,8 +256,8 @@ def exibir():
         for doc in docs_xml:
             with st.expander(f'{doc["nome"]} — {doc["empresa"]} {doc["ano"]}/{doc["mes"]}'):
                 st.write(f"📌 Empresa: {doc['empresa']}")
-                tipo_xml = doc.get('tipo_xml', doc.get('tipo', 'Desconhecido'))
-                tipo_nota = doc.get('tipo_nota', 'Desconhecido')
+                tipo_xml = doc.get('tipo_xml') or doc.get('tipo') or 'Desconhecido'
+                tipo_nota = doc.get('tipo_nota') or 'Desconhecido'
                 st.write(f"📄 Tipo de XML: {tipo_xml}")
                 st.write(f"📝 Tipo de Nota: {tipo_nota}")
                 st.write(f"📅 Data: {doc['ano']}/{doc['mes']}")
