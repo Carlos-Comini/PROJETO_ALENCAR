@@ -117,8 +117,10 @@ else:
             st.session_state["menu"] = label
 
     menu = st.session_state["menu"]
-    # Exibe apenas o conteúdo da página selecionada conforme permissões
-    if menu == "Dashboard":
+    # Só exibe página se o usuário clicar no menu
+    if menu is None:
+        st.info("Bem-vindo! Selecione uma página no menu acima.")
+    elif menu == "Dashboard":
         dashboard.main()
     elif menu == "Empresas Clientes":
         cadastro_empresas.exibir()
@@ -130,5 +132,5 @@ else:
         arquivo.exibir()
     elif menu == "Sair":
         st.session_state.usuario_autenticado = False
-        st.session_state.menu = "Dashboard"
+        st.session_state.menu = None
         st.experimental_rerun()
