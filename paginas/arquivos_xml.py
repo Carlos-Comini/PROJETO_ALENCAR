@@ -20,7 +20,25 @@ def parse_xml(file_path):
         total = root.find(".//nfe:ICMSTot", ns)
 
         numero = ide.find("nfe:nNF", ns).text if ide is not None else "—"
-        data_emissao = ide.find("nfe:dhEmi", ns).text[:10] if ide is not None else "—"
+        # Busca data de emissão por várias tags possíveis
+        data_emissao = "—"
+        if ide is not None:
+            for tag in ["nfe:dhEmi", "nfe:dEmi", "nfe:dataEmissao", "nfe:DataEmissao", "nfe:dtEmi"]:
+                elem = ide.find(tag, ns)
+                if elem is not None and elem.text:
+                    # Se vier com hora, pega só a data
+                    data_emissao = elem.text[:10]
+                    break
+        if data_emissao == "—":
+            # Busca em todo o XML se não achou na ide
+            for tag in ["dhEmi", "dEmi", "dataEmissao", "DataEmissao", "dtEmi"]:
+                for elem in root.iter():
+                    localname = elem.tag.split('}')[-1] if '}' in elem.tag else elem.tag
+                    if localname == tag and elem.text:
+                        data_emissao = elem.text[:10]
+                        break
+                if data_emissao != "—":
+                    break
         cnpj_emit = emit.find("nfe:CNPJ", ns).text if emit is not None else "—"
         cnpj_dest = dest.find("nfe:CNPJ", ns).text if dest is not None else "—"
         valor = total.find("nfe:vNF", ns).text if total is not None else "—"

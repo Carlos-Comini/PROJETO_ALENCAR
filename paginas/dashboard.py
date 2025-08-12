@@ -55,4 +55,4 @@ def exibir():
     st.subheader("📋 Tabela de Documentos Filtrados")
     st.dataframe(df_filtrado, use_container_width=True)
 
-    st.download_button("⬇️ Exportar dados filtrados para CSV", df_filtrado.to_csv(index=False), file_name="dashboard_documentos.csv")
+    st.download_button("⬇️ Exportar dados filtrados para Excel", df_filtrado.to_excel(index=False), file_name="dashboard_documentos.xlsx")
