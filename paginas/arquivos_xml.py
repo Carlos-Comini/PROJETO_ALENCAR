@@ -201,7 +201,7 @@ def exibir():
                     "data_upload": datetime.now().strftime("%Y-%m-%d %H:%M:%S")
                 }
                 registrar_documento(info_doc)
-                st.info(f"Arquivo XML salvo e registrado como {tipo_xml} - {tipo_nota}!")
+                st.info(f"Arquivo XML salvo e registrado como {info_doc['tipo_xml']} - {info_doc['tipo_nota']}!")
         st.success(f"{len(uploaded)} arquivo(s) salvo(s) com sucesso!")
 
     st.subheader("📁 Arquivos Recebidos")
@@ -217,7 +217,7 @@ def exibir():
         for doc in docs_xml:
             with st.expander(f'{doc["nome"]} — {doc["empresa"]} {doc["ano"]}/{doc["mes"]}'):
                 st.write(f"📌 Empresa: {doc['empresa']}")
-                tipo_xml = doc.get('tipo_xml', 'Desconhecido')
+                tipo_xml = doc.get('tipo_xml', doc.get('tipo', 'Desconhecido'))
                 tipo_nota = doc.get('tipo_nota', 'Desconhecido')
                 st.write(f"📄 Tipo de XML: {tipo_xml}")
                 st.write(f"📝 Tipo de Nota: {tipo_nota}")
