@@ -115,6 +115,7 @@ def exibir():
                     "mes": hoje.split('_')[1],
                     "tipo_xml": tipo_xml,
                     "tipo_nota": tipo_nota,
+                    "tipo": tipo_xml,
                     "data_upload": datetime.now().strftime("%Y-%m-%d %H:%M:%S")
                 }
                 registrar_documento(info_doc)
