@@ -45,12 +45,16 @@ def exibir():
             nome = st.text_input("Nome")
             email = st.text_input("Email")
             senha = st.text_input("Senha", type="password")
-
+            permitir_cadastros = False
+            empresa = None
             if tipo == "Escritório":
                 permitir_cadastros = st.checkbox("Permitir Cadastros", key="cadastrar_escritorio")
                 permitir_ver_arquivo = st.checkbox("Permitir Ver Arquivo", key="ver_arquivo_escritorio")
                 permitir_ver_xml = st.checkbox("Permitir Ver XML", key="ver_xml_escritorio")
             else:
+                import pandas as pd
+                from funcoes_compartilhadas.empresas_sql import listar_empresas
+                empresas_df = pd.DataFrame(listar_empresas())
                 empresas = []
                 if not empresas_df.empty:
                     if "nome_empresa" in empresas_df.columns:
