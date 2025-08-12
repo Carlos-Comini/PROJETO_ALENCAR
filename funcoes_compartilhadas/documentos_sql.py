@@ -25,23 +25,27 @@ def criar_tabela_documentos():
     conn = conectar()
     cursor = conn.cursor()
     cursor.execute('''
-        CREATE TABLE IF NOT EXISTS documentos (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            nome TEXT,
-            caminho TEXT,
-            empresa TEXT,
-            cnpj TEXT,
-            banco TEXT,
-            ano TEXT,
-            mes TEXT,
-            tipo TEXT,
-            tipo_nota TEXT,
-            usuario TEXT,
-            razao_social_usuario TEXT,
-            data_upload TEXT,
-            data_documento TEXT
-        )
-    ''')
+CREATE TABLE IF NOT EXISTS documentos (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    nome TEXT,
+    caminho TEXT,
+    empresa TEXT,
+    cnpj TEXT,
+    banco TEXT,
+    ano TEXT,
+    mes TEXT,
+    tipo TEXT,
+    tipo_nota TEXT,
+    usuario TEXT,
+    razao_social_usuario TEXT,
+    data_upload TEXT
+)
+''')
+    # Garante que o campo data_documento existe
+    try:
+        cursor.execute("ALTER TABLE documentos ADD COLUMN data_documento TEXT")
+    except Exception:
+        pass  # Se já existe, ignora
     conn.commit()
     conn.close()
 
