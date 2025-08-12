@@ -157,7 +157,9 @@ def exibir():
                 cnpj_emit = None
                 cnpj_dest = None
 
-            # Aceita qualquer tipo reconhecido
+            # Aceita qualquer tipo reconhecido e define tipo de nota
+            tipo_nota = 'Desconhecido'
+            cnpj = None
             if cnpj_emit in empresas_cadastradas:
                 tipo_nota = 'Saída'
                 cnpj = cnpj_emit
