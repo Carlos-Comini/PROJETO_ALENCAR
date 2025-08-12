@@ -78,6 +78,7 @@ def processa_login_por_url():
             st.session_state.usuario_autenticado = True
             st.session_state.tipo_usuario = tipo
             st.session_state.dados_usuario = dados
+            st.session_state.menu = "Dashboard"
             st.rerun()
         else:
             st.error("❌ Login inválido.")
@@ -86,6 +87,9 @@ def processa_login_por_url():
 if not st.session_state.usuario_autenticado:
     exibir_login_html()
     processa_login_por_url()
+    # Garante que o menu padrão seja Dashboard após login manual
+    if st.session_state.usuario_autenticado:
+        st.session_state.menu = "Dashboard"
 else:
     aplicar_estilo_padrao()
 
