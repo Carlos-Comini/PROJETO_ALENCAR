@@ -71,31 +71,19 @@ def exibir():
                 # Detecta NFS-e pelo nome da tag raiz ou namespace
                 root_localname = root.tag.split('}')[-1] if '}' in root.tag else root.tag
                 root_ns = root.tag.split('}')[0][1:] if '}' in root.tag else ''
+                # Detecta modelo fiscal por tag raiz, campo <mod> ou tags internas
+                tipo_xml = 'Desconhecido'
+                # Tag raiz
                 if root_localname.lower().startswith('compnfse') or 'nfse.xsd' in root_ns:
                     tipo_xml = 'NFS-e'
-                    # CNPJ do prestador (emitente)
-                    cnpj_emit = None
-                    for elem in root.iter():
-                        localname = elem.tag.split('}')[-1] if '}' in elem.tag else elem.tag
-                        if localname == 'PrestadorServico':
-                            for subelem in elem.iter():
-                                sublocal = subelem.tag.split('}')[-1] if '}' in subelem.tag else subelem.tag
-                                if sublocal == 'Cnpj':
-                                    cnpj_emit = subelem.text
-                                    break
-                            break
-                    # CNPJ do tomador (destinatário)
-                    cnpj_dest = None
-                    for elem in root.iter():
-                        localname = elem.tag.split('}')[-1] if '}' in elem.tag else elem.tag
-                        if localname == 'Tomador':
-                            for subelem in elem.iter():
-                                sublocal = subelem.tag.split('}')[-1] if '}' in subelem.tag else subelem.tag
-                                if sublocal == 'Cnpj':
-                                    cnpj_dest = subelem.text
-                                    break
-                            break
-                else:
+                elif root_localname.lower().startswith('nfeproc') or root_localname.lower() == 'nfe':
+                    tipo_xml = 'NF-e'
+                elif root_localname.lower().startswith('cteproc') or root_localname.lower() == 'cte':
+                    tipo_xml = 'CT-e'
+                elif root_localname.lower().startswith('mdfeproc') or root_localname.lower() == 'mdfe':
+                    tipo_xml = 'MDF-e'
+                # Campo <mod>
+                if tipo_xml == 'Desconhecido':
                     mod_val = find_tag(root, 'mod')
                     if mod_val == '55':
                         tipo_xml = 'NF-e'
@@ -103,19 +91,66 @@ def exibir():
                         tipo_xml = 'NFC-e'
                     elif mod_val == '57':
                         tipo_xml = 'CT-e'
-                    else:
-                        tipo_xml = mod_val or 'Desconhecido'
-                    # CNPJ emitente/destinatário para NF-e, CT-e, etc
-                    cnpj_emit = find_tag(root, 'CNPJ')
-                    cnpj_dest = None
+                    elif mod_val == '58':
+                        tipo_xml = 'MDF-e'
+                    elif mod_val:
+                        tipo_xml = mod_val
+                # Busca por tags internas que indicam modelo
+                if tipo_xml == 'Desconhecido':
                     for elem in root.iter():
                         localname = elem.tag.split('}')[-1] if '}' in elem.tag else elem.tag
-                        if localname == 'dest' or localname == 'receb':
-                            for subelem in elem.iter():
-                                sublocal = subelem.tag.split('}')[-1] if '}' in subelem.tag else subelem.tag
-                                if sublocal == 'CNPJ':
-                                    cnpj_dest = subelem.text
-                                    break
+                        if localname.lower() == 'nfe':
+                            tipo_xml = 'NF-e'
+                            break
+                        elif localname.lower() == 'cte':
+                            tipo_xml = 'CT-e'
+                            break
+                        elif localname.lower() == 'nfse':
+                            tipo_xml = 'NFS-e'
+                            break
+                        elif localname.lower() == 'mdfe':
+                            tipo_xml = 'MDF-e'
+                            break
+                # Busca de texto simples no XML para identificar modelo
+                if tipo_xml == 'Desconhecido':
+                    try:
+                        with open(temp_path, 'r', encoding='utf-8') as f:
+                            xml_text = f.read().lower()
+                        if 'nfce' in xml_text:
+                            tipo_xml = 'NFC-e'
+                        elif 'nfe' in xml_text:
+                            tipo_xml = 'NF-e'
+                        elif 'cte' in xml_text:
+                            tipo_xml = 'CT-e'
+                        elif 'nfse' in xml_text:
+                            tipo_xml = 'NFS-e'
+                        elif 'mdfe' in xml_text:
+                            tipo_xml = 'MDF-e'
+                    except Exception:
+                        pass
+                # Busca CNPJ do emitente em várias tags possíveis
+                cnpj_emit = None
+                for elem in root.iter():
+                    localname = elem.tag.split('}')[-1] if '}' in elem.tag else elem.tag
+                    if localname in ['PrestadorServico', 'emit', 'prest']:
+                        for subelem in elem.iter():
+                            sublocal = subelem.tag.split('}')[-1] if '}' in subelem.tag else subelem.tag
+                            if sublocal in ['Cnpj', 'CNPJ']:
+                                cnpj_emit = subelem.text
+                                break
+                        if cnpj_emit:
+                            break
+                # Busca CNPJ do destinatário/tomador em várias tags possíveis
+                cnpj_dest = None
+                for elem in root.iter():
+                    localname = elem.tag.split('}')[-1] if '}' in elem.tag else elem.tag
+                    if localname in ['Tomador', 'dest', 'receb', 'toma']:
+                        for subelem in elem.iter():
+                            sublocal = subelem.tag.split('}')[-1] if '}' in subelem.tag else subelem.tag
+                            if sublocal in ['Cnpj', 'CNPJ']:
+                                cnpj_dest = subelem.text
+                                break
+                        if cnpj_dest:
                             break
             except Exception:
                 tipo_xml = 'Desconhecido'
