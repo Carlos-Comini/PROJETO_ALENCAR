@@ -121,28 +121,31 @@ def exibir():
                             tipo_xml = 'NFS-e'
                         elif 'mdfe' in xml_text:
                             tipo_xml = 'MDF-e'
-                        # Busca todos os CNPJs no texto
-                        import re
-                        cnpjs_encontrados = re.findall(r'\d{14}', xml_text)
-                        # Remove duplicados
-                        cnpjs_encontrados = list(dict.fromkeys(cnpjs_encontrados))
-                        # Se houver CNPJs, verifica se algum está cadastrado
+                        # Busca CNPJ do emitente e destinatário pelas tags corretas
                         cnpj_emit = None
                         cnpj_dest = None
+                        for elem in root.iter():
+                            localname = elem.tag.split('}')[-1] if '}' in elem.tag else elem.tag
+                            if localname.lower() == 'emit':
+                                for subelem in elem.iter():
+                                    sublocal = subelem.tag.split('}')[-1] if '}' in subelem.tag else subelem.tag
+                                    if sublocal.lower() == 'cnpj':
+                                        cnpj_emit = normaliza_cnpj(subelem.text)
+                                        break
+                            if localname.lower() == 'dest':
+                                for subelem in elem.iter():
+                                    sublocal = subelem.tag.split('}')[-1] if '}' in subelem.tag else subelem.tag
+                                    if sublocal.lower() == 'cnpj':
+                                        cnpj_dest = normaliza_cnpj(subelem.text)
+                                        break
                         tipo_nota = 'Desconhecido'
                         cnpj = None
-                        for idx, cnpj_xml in enumerate(cnpjs_encontrados):
-                            cnpj_xml_norm = normaliza_cnpj(cnpj_xml)
-                            if cnpj_xml_norm in empresas_cadastradas:
-                                if idx == 0:
-                                    tipo_nota = 'Saída'
-                                    cnpj_emit = cnpj_xml
-                                    cnpj = cnpj_xml_norm
-                                else:
-                                    tipo_nota = 'Entrada'
-                                    cnpj_dest = cnpj_xml
-                                    cnpj = cnpj_xml_norm
-                                break
+                        if cnpj_emit and cnpj_emit in empresas_cadastradas:
+                            tipo_nota = 'Saída'
+                            cnpj = cnpj_emit
+                        elif cnpj_dest and cnpj_dest in empresas_cadastradas:
+                            tipo_nota = 'Entrada'
+                            cnpj = cnpj_dest
                     except Exception:
                         pass
                 # Se não encontrou pelo texto, tenta buscar CNPJ por tags (fallback)
