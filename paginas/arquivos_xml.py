@@ -76,8 +76,9 @@ def exibir():
                 tree = ET.parse(temp_path)
                 root = tree.getroot()
                 ns = {'nfe': 'http://www.portalfiscal.inf.br/nfe'}
-                mod = root.find('.//nfe:ide/nfe:mod', ns)
-                mod_val = mod.text if mod is not None else ''
+                # O elemento <ide> está dentro de <NFe>/<infNFe>/<ide>
+                ide = root.find('.//{http://www.portalfiscal.inf.br/nfe}NFe/{http://www.portalfiscal.inf.br/nfe}infNFe/{http://www.portalfiscal.inf.br/nfe}ide')
+                mod_val = ide.find('{http://www.portalfiscal.inf.br/nfe}mod').text if ide is not None and ide.find('{http://www.portalfiscal.inf.br/nfe}mod') is not None else ''
                 if mod_val == '55':
                     tipo_xml = 'NF-e'
                 elif mod_val == '65':
@@ -86,8 +87,8 @@ def exibir():
                     tipo_xml = 'CT-e'
                 else:
                     tipo_xml = mod_val or 'Desconhecido'
-                tpNF = root.find('.//nfe:ide/nfe:tpNF', ns)
-                tipo_nota = 'Saída' if tpNF is not None and tpNF.text == '1' else ('Entrada' if tpNF is not None and tpNF.text == '0' else 'Desconhecido')
+                tpNF = ide.find('{http://www.portalfiscal.inf.br/nfe}tpNF').text if ide is not None and ide.find('{http://www.portalfiscal.inf.br/nfe}tpNF') is not None else ''
+                tipo_nota = 'Saída' if tpNF == '1' else ('Entrada' if tpNF == '0' else 'Desconhecido')
             except Exception:
                 tipo_xml = 'Desconhecido'
                 tipo_nota = 'Desconhecido'
