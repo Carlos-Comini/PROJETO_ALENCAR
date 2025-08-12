@@ -52,12 +52,14 @@ def exibir():
                 permitir_ver_xml = st.checkbox("Permitir Ver XML")
 
                 if st.form_submit_button("Salvar"):
+                    from funcoes_compartilhadas.conversa_banco import hash_senha
+                    senha_hash = hash_senha(senha)
                     permissoes = {
                         "cadastrar": permitir_cadastros,
                         "ver_arquivo": permitir_ver_arquivo,
                         "ver_xml": permitir_ver_xml
                     }
-                    inserir_usuario(nome, email, senha, "Escritorio", permissoes=permissoes)
+                    inserir_usuario(nome, email, senha_hash, "Escritorio", permissoes=permissoes)
                     st.success("Usuário do escritório cadastrado.")
 
             else:
@@ -75,17 +77,19 @@ def exibir():
                         empresas = empresas_df.iloc[:,0].astype(str).tolist()
                 else:
                     empresas = []
-                empresa = st.selectbox("Empresa", empresas)
-                permitir_ver_arquivo = st.checkbox("Permitir Ver Arquivo")
-                permitir_ver_xml = st.checkbox("Permitir Ver XML")
+            empresa = st.selectbox("Empresa", empresas)
+            permitir_ver_arquivo = st.checkbox("Permitir Ver Arquivo")
+            permitir_ver_xml = st.checkbox("Permitir Ver XML")
 
-                if st.form_submit_button("Salvar"):
-                    permissoes = {
-                        "ver_arquivo": permitir_ver_arquivo,
-                        "ver_xml": permitir_ver_xml
-                    }
-                    inserir_usuario(nome, email, senha, "Cliente", empresa=empresa, permissoes=permissoes)
-                    st.success("Usuário de cliente cadastrado.")
+            if st.form_submit_button("Salvar"):
+                from funcoes_compartilhadas.conversa_banco import hash_senha
+                senha_hash = hash_senha(senha)
+                permissoes = {
+                    "ver_arquivo": permitir_ver_arquivo,
+                    "ver_xml": permitir_ver_xml
+                }
+                inserir_usuario(nome, email, senha_hash, "Cliente", empresa=empresa, permissoes=permissoes)
+                st.success("Usuário de cliente cadastrado.")
 
     elif escolha == "Usuários cadastrados":
         st.subheader("Usuários cadastrados")
