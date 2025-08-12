@@ -19,18 +19,35 @@ def parse_xml(file_path):
         dest = root.find(".//nfe:dest", ns)
         total = root.find(".//nfe:ICMSTot", ns)
 
-        numero = ide.find("nfe:nNF", ns).text if ide is not None else "—"
-        # Busca data de emissão por várias tags possíveis
+        numero = "—"
         data_emissao = "—"
-        if ide is not None:
-            for tag in ["nfe:dhEmi", "nfe:dEmi", "nfe:dataEmissao", "nfe:DataEmissao", "nfe:dtEmi"]:
-                elem = ide.find(tag, ns)
-                if elem is not None and elem.text:
-                    # Se vier com hora, pega só a data
-                    data_emissao = elem.text[:10]
-                    break
+        # Detecta layout
+        root_tag = root.tag.split('}')[-1] if '}' in root.tag else root.tag
+        if root_tag.lower() in ["nfeproc", "nfe"]:
+            # NF-e
+            if ide is not None:
+                numero = ide.find("nfe:nNF", ns).text if ide.find("nfe:nNF", ns) is not None else "—"
+                dhEmi = ide.find("nfe:dhEmi", ns)
+                if dhEmi is not None and dhEmi.text:
+                    data_emissao = dhEmi.text[:10]
+        elif root_tag.lower() in ["compnfse", "nfse"]:
+            # NFS-e
+            infNfse = root.find(".//InfNfse")
+            if infNfse is not None:
+                numero = infNfse.find("Numero").text if infNfse.find("Numero") is not None else "—"
+                data_tag = infNfse.find("DataEmissao")
+                if data_tag is not None and data_tag.text:
+                    data_emissao = data_tag.text[:10]
+        elif root_tag.lower() in ["cteproc", "cte"]:
+            # CT-e
+            ide_cte = root.find(".//ide")
+            if ide_cte is not None:
+                numero = ide_cte.find("nCT").text if ide_cte.find("nCT") is not None else "—"
+                dhEmi = ide_cte.find("dhEmi")
+                if dhEmi is not None and dhEmi.text:
+                    data_emissao = dhEmi.text[:10]
+        # Fallback para outros layouts
         if data_emissao == "—":
-            # Busca em todo o XML se não achou na ide
             for tag in ["dhEmi", "dEmi", "dataEmissao", "DataEmissao", "dtEmi"]:
                 for elem in root.iter():
                     localname = elem.tag.split('}')[-1] if '}' in elem.tag else elem.tag
@@ -235,7 +252,9 @@ def exibir():
             pasta_destino.mkdir(parents=True, exist_ok=True)
             caminho = pasta_destino / file.name
             temp_path.replace(caminho)
-            # Evita duplicidade: verifica se já existe registro igual
+            # Extrai dados do XML para salvar a data exata
+            dados_xml = parse_xml(str(caminho))
+            data_documento = dados_xml.get("Data", "—")
             documentos_existentes = listar_documentos()
             ja_existe = any(
                 d["nome"] == file.name and d["caminho"] == str(caminho)
@@ -255,7 +274,8 @@ def exibir():
                     "tipo_xml": tipo_xml,
                     "tipo_nota": tipo_nota,
                     "tipo": tipo_xml,
-                    "data_upload": datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+                    "data_upload": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+                    "data_documento": data_documento
                 }
                 registrar_documento(info_doc)
                 st.info(f"Arquivo XML salvo e registrado como {info_doc['tipo_xml']} - {info_doc['tipo_nota']}!")
@@ -278,7 +298,11 @@ def exibir():
                 tipo_nota = doc.get('tipo_nota') or 'Desconhecido'
                 st.write(f"📄 Tipo de XML: {tipo_xml}")
                 st.write(f"📝 Tipo de Nota: {tipo_nota}")
-                st.write(f"📅 Data: {doc['ano']}/{doc['mes']}")
+                data_real = doc.get('data_documento', None)
+                if data_real:
+                    st.write(f"📅 Data do Documento: {data_real}")
+                else:
+                    st.write(f"📅 Data do Upload: {doc['ano']}/{doc['mes']}")
                 with open(doc["caminho"], "rb") as f:
                     st.download_button("⬇️ Baixar XML", f, file_name=doc["nome"], key=f"download_{doc['id']}")
                 if st.button(f"🗑️ Excluir XML {doc['id']}", key=f"delxml_{doc['id']}"):
