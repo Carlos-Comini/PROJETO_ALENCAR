@@ -112,6 +112,11 @@ def exibir():
         for doc in docs_xml:
             with st.expander(f'{doc["nome"]} — {doc["empresa"]} {doc["ano"]}/{doc["mes"]}'):
                 st.write(f"📌 Empresa: {doc['empresa']}")
+                # Exibe tipo de XML e se é entrada ou saída
+                tipo_xml = doc.get('tipo', '').replace('xml_', '').capitalize() if doc.get('tipo') else 'Desconhecido'
+                st.write(f"📄 Tipo: {tipo_xml}")
+                entrada_saida = 'Entrada' if 'entrada' in doc.get('tipo', '') else ('Saída' if 'saida' in doc.get('tipo', '') else 'Desconhecido')
+                st.write(f"🔄 Entrada/Saída: {entrada_saida}")
                 st.write(f"📅 Data: {doc['ano']}/{doc['mes']}")
                 with open(doc["caminho"], "rb") as f:
                     st.download_button("⬇️ Baixar XML", f, file_name=doc["nome"], key=f"download_{doc['id']}")
