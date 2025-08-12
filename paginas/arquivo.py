@@ -141,7 +141,7 @@ def exibir():
             st.write(f"👤 Usuário: {doc.get('usuario', 'N/A')}")
             st.write(f"📅 Data: {doc['mes']}/{doc['ano']}")
             with open(doc["caminho"], "rb") as f:
-                st.download_button("⬇️ Baixar", f, file_name=doc["nome"])
+                    st.download_button("⬇️ Baixar", f, file_name=doc["nome"], key=f"download_{doc['id']}")
             if st.button(f"🗑️ Excluir documento {doc['id']}", key=f"del_{doc['id']}"):
                 if st.session_state.get(f"confirm_del_{doc['id']}") != True:
                     st.warning("Tem certeza que deseja excluir este documento?")
@@ -155,9 +155,13 @@ def exibir():
                 elif st.session_state.get(f"confirm_del_{doc['id']}") == True:
                     try:
                         deletar_documento(doc['id'])
+                        st.write(f"Caminho do arquivo: {doc['caminho']}")
+                        st.write(f"Arquivo existe? {os.path.exists(doc['caminho'])}")
                         if os.path.exists(doc['caminho']):
                             os.remove(doc['caminho'])
-                        st.success("Documento excluído com sucesso!")
+                            st.success("Documento excluído com sucesso!")
+                        else:
+                            st.warning("Arquivo não encontrado para exclusão.")
                         st.session_state[f"confirm_del_{doc['id']}"] = False
                     except Exception as e:
                         st.error(f"Erro ao excluir: {e}")
