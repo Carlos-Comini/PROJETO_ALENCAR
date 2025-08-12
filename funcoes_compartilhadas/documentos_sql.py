@@ -10,6 +10,9 @@ from typing import Optional, Dict, List
 DB_PATH = 'usuarios.db'
 
 def conectar():
+    import os
+    abs_path = os.path.abspath(DB_PATH)
+    print(f"[DEBUG] Usando banco de dados: {abs_path}")
     return sqlite3.connect(DB_PATH)
 
 def criar_tabela_documentos():
