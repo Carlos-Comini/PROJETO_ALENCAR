@@ -99,7 +99,9 @@ def exibir():
             else:
                 df_filtrados = df_usuarios[df_usuarios["tipo"].str.lower() == "cliente"]
             if not df_filtrados.empty:
-                st.dataframe(df_filtrados, use_container_width=True)
+                # Remove colunas 'id' e 'senha' da exibição
+                colunas_ocultas = [col for col in ['id', 'senha'] if col in df_filtrados.columns]
+                st.dataframe(df_filtrados.drop(columns=colunas_ocultas), use_container_width=True)
             else:
                 st.info(f"Nenhum usuário do tipo {opcao_tabela} cadastrado ainda.")
         else:
