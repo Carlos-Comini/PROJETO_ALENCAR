@@ -55,7 +55,7 @@ def exibir():
             # Verifica se o CNPJ do emitente ou destinatário está cadastrado
             from funcoes_compartilhadas.empresas_sql import listar_empresas
             empresas_cadastradas = [e["cnpj"] for e in listar_empresas()]
-            # Definir CNPJ e tipo de nota antes de extrair tipo_xml
+            # Definir CNPJ e tipo de nota conforme cadastro
             tipo_nota = 'Desconhecido'
             cnpj = None
             if cnpj_emit in empresas_cadastradas:
@@ -71,32 +71,33 @@ def exibir():
                 )
                 continue
 
-            # Extrai tipo de XML (NF-e, CT-e, etc) e tipo de nota ANTES de mover o arquivo
+            # Extrai tipo de XML (NF-e, CT-e, etc) ANTES de mover o arquivo
             try:
                 tree = ET.parse(temp_path)
                 root = tree.getroot()
-                # Busca <mod> e <tpNF> ignorando namespace
                 def find_tag(root, tag):
                     for elem in root.iter():
-                        # Remove namespace se existir
                         localname = elem.tag.split('}')[-1] if '}' in elem.tag else elem.tag
                         if localname == tag:
                             return elem.text
                     return None
-                mod_val = find_tag(root, 'mod')
-                if mod_val == '55':
-                    tipo_xml = 'NF-e'
-                elif mod_val == '65':
-                    tipo_xml = 'NFC-e'
-                elif mod_val == '57':
-                    tipo_xml = 'CT-e'
+                # Detecta NFS-e pelo nome da tag raiz ou namespace
+                root_localname = root.tag.split('}')[-1] if '}' in root.tag else root.tag
+                root_ns = root.tag.split('}')[0][1:] if '}' in root.tag else ''
+                if root_localname.lower().startswith('compnfse') or 'nfse.xsd' in root_ns:
+                    tipo_xml = 'NFS-e'
                 else:
-                    tipo_xml = mod_val or 'Desconhecido'
-                tpNF = find_tag(root, 'tpNF')
-                tipo_nota = 'Saída' if tpNF == '1' else ('Entrada' if tpNF == '0' else 'Desconhecido')
+                    mod_val = find_tag(root, 'mod')
+                    if mod_val == '55':
+                        tipo_xml = 'NF-e'
+                    elif mod_val == '65':
+                        tipo_xml = 'NFC-e'
+                    elif mod_val == '57':
+                        tipo_xml = 'CT-e'
+                    else:
+                        tipo_xml = mod_val or 'Desconhecido'
             except Exception:
                 tipo_xml = 'Desconhecido'
-                tipo_nota = 'Desconhecido'
 
             empresa_info = buscar_empresa_por_cnpj(cnpj)
             nome_empresa = empresa_info["razao_social"] if empresa_info else cnpj
