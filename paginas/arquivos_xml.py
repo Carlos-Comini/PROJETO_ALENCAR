@@ -54,7 +54,11 @@ def exibir():
             cnpj_dest = info["CNPJ_Destinatario"]
             # Verifica se o CNPJ do emitente ou destinatário está cadastrado
             from funcoes_compartilhadas.empresas_sql import listar_empresas
-            empresas_cadastradas = [e["cnpj"] for e in listar_empresas()]
+            def normaliza_cnpj(cnpj):
+                if not cnpj:
+                    return ''
+                return ''.join(filter(str.isdigit, cnpj))
+            empresas_cadastradas = [normaliza_cnpj(e["cnpj"]) for e in listar_empresas()]
             # Definir CNPJ e tipo de nota conforme cadastro
             tipo_nota = 'Desconhecido'
             cnpj = None
@@ -160,12 +164,14 @@ def exibir():
             # Aceita qualquer tipo reconhecido e define tipo de nota
             tipo_nota = 'Desconhecido'
             cnpj = None
-            if cnpj_emit in empresas_cadastradas:
+            cnpj_emit_norm = normaliza_cnpj(cnpj_emit)
+            cnpj_dest_norm = normaliza_cnpj(cnpj_dest)
+            if cnpj_emit_norm in empresas_cadastradas:
                 tipo_nota = 'Saída'
-                cnpj = cnpj_emit
-            elif cnpj_dest in empresas_cadastradas:
+                cnpj = cnpj_emit_norm
+            elif cnpj_dest_norm in empresas_cadastradas:
                 tipo_nota = 'Entrada'
-                cnpj = cnpj_dest
+                cnpj = cnpj_dest_norm
             else:
                 st.warning(
                     f"O arquivo '{file.name}' não foi aceito porque o CNPJ do emitente ou destinatário não está cadastrado no sistema. "
