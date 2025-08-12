@@ -78,7 +78,6 @@ def processa_login_por_url():
             st.session_state.usuario_autenticado = True
             st.session_state.tipo_usuario = tipo
             st.session_state.dados_usuario = dados
-            st.session_state.menu = None
             st.rerun()
         else:
             st.error("❌ Login inválido.")
@@ -90,9 +89,8 @@ if not st.session_state.usuario_autenticado:
 else:
     aplicar_estilo_padrao()
 
-    # Inicializa o menu na sessão apenas se não existir
-    if "menu" not in st.session_state:
-        st.session_state["menu"] = None
+    # Inicializa o menu na sessão se não existir
+    st.session_state["menu"] = st.session_state.get("menu", "Dashboard")
 
     # Permissões do usuário logado
     dados_usuario = st.session_state.get("dados_usuario", {})
@@ -118,20 +116,19 @@ else:
             st.session_state["menu"] = label
 
     menu = st.session_state["menu"]
-    # Só exibe página se o usuário clicar no menu
-    if menu is None:
-        st.info("Bem-vindo! Selecione uma página no menu acima.")
-    elif menu == "Dashboard":
-        dashboard.main()
-    elif menu == "Empresas Clientes":
+    # Exibe apenas o conteúdo da página selecionada conforme permissões
+    if menu == "Dashboard":
+        dashboard.exibir()
+    elif menu == "Empresas Clientes" and permitir_cadastros:
         cadastro_empresas.exibir()
-    elif menu == "Usuários":
+    elif menu == "Usuários" and permitir_cadastros:
         cadastro_usuarios.exibir()
-    elif menu == "XMLs":
+    elif menu == "XMLs" and permitir_ver_xml:
         arquivos_xml.exibir()
-    elif menu == "Arquivos":
+    elif menu == "Arquivos" and permitir_ver_arquivo:
         arquivo.exibir()
     elif menu == "Sair":
         st.session_state.usuario_autenticado = False
-        st.session_state.menu = None
-        st.experimental_rerun()
+        st.session_state.tipo_usuario = ""
+        st.session_state.dados_usuario = {}
+        st.rerun()
