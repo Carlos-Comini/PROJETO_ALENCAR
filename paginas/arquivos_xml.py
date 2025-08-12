@@ -75,10 +75,13 @@ def exibir():
             try:
                 tree = ET.parse(temp_path)
                 root = tree.getroot()
-                ns = {'nfe': 'http://www.portalfiscal.inf.br/nfe'}
-                # O elemento <ide> está dentro de <NFe>/<infNFe>/<ide>
-                ide = root.find('.//{http://www.portalfiscal.inf.br/nfe}NFe/{http://www.portalfiscal.inf.br/nfe}infNFe/{http://www.portalfiscal.inf.br/nfe}ide')
-                mod_val = ide.find('{http://www.portalfiscal.inf.br/nfe}mod').text if ide is not None and ide.find('{http://www.portalfiscal.inf.br/nfe}mod') is not None else ''
+                # Busca <mod> e <tpNF> ignorando namespace
+                def find_tag(root, tag):
+                    for elem in root.iter():
+                        if elem.tag.endswith(tag):
+                            return elem.text
+                    return None
+                mod_val = find_tag(root, 'mod')
                 if mod_val == '55':
                     tipo_xml = 'NF-e'
                 elif mod_val == '65':
@@ -87,7 +90,7 @@ def exibir():
                     tipo_xml = 'CT-e'
                 else:
                     tipo_xml = mod_val or 'Desconhecido'
-                tpNF = ide.find('{http://www.portalfiscal.inf.br/nfe}tpNF').text if ide is not None and ide.find('{http://www.portalfiscal.inf.br/nfe}tpNF') is not None else ''
+                tpNF = find_tag(root, 'tpNF')
                 tipo_nota = 'Saída' if tpNF == '1' else ('Entrada' if tpNF == '0' else 'Desconhecido')
             except Exception:
                 tipo_xml = 'Desconhecido'
