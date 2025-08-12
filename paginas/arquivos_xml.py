@@ -54,6 +54,9 @@ def exibir():
         for file in uploaded:
             temp_path = XML_BASE / "temp.xml"
             try:
+                # Salva o arquivo temporário antes do parse
+                with open(temp_path, "wb") as f:
+                    f.write(file.read())
                 # Busca modelo fiscal por tag raiz, campo <mod>, tags internas ou texto
                 tipo_xml = 'Desconhecido'
                 cnpj_emit = None
