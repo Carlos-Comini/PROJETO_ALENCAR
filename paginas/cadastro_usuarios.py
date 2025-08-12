@@ -62,13 +62,7 @@ def exibir():
                     inserir_usuario(nome, email, senha_hash, "Escritorio", permissoes=permissoes)
                     st.success("Usuário do escritório cadastrado.")
 
-            else:
-                # Buscar empresas do banco SQL
-                import pandas as pd
-                from funcoes_compartilhadas.empresas_sql import listar_empresas
-                empresas_df = pd.DataFrame(listar_empresas())
                 empresas = []
-                # Corrige KeyError: usa 'razao_social' se 'nome_empresa' não existir
                 if not empresas_df.empty:
                     if "nome_empresa" in empresas_df.columns:
                         empresas = empresas_df["nome_empresa"].tolist()
