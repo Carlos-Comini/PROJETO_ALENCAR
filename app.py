@@ -30,7 +30,7 @@ st.markdown("""
 """, unsafe_allow_html=True)
 import streamlit as st
 import streamlit.components.v1 as components
-from paginas import cadastro_empresas, cadastro_usuarios, arquivos_xml, arquivo
+from paginas import cadastro_empresas, cadastro_usuarios, arquivos_xml, arquivo, dashboard
 from funcoes_compartilhadas.conversa_banco import autenticar_usuario
 from funcoes_compartilhadas.estilos import aplicar_estilo_padrao
 
@@ -118,18 +118,16 @@ else:
     menu = st.session_state["menu"]
     # Exibe apenas o conteúdo da página selecionada conforme permissões
     if menu == "Dashboard":
-        st.title("Bem-vindo!")
-        st.info("Selecione uma opção no menu acima para acessar as funcionalidades do sistema.")
-    elif menu == "Empresas Clientes" and permitir_cadastros:
+        dashboard.main()
+    elif menu == "Empresas Clientes":
         cadastro_empresas.exibir()
-    elif menu == "Usuários" and permitir_cadastros:
+    elif menu == "Usuários":
         cadastro_usuarios.exibir()
-    elif menu == "XMLs" and permitir_ver_xml:
+    elif menu == "XMLs":
         arquivos_xml.exibir()
-    elif menu == "Arquivos" and permitir_ver_arquivo:
+    elif menu == "Arquivos":
         arquivo.exibir()
     elif menu == "Sair":
         st.session_state.usuario_autenticado = False
-        st.session_state.tipo_usuario = ""
-        st.session_state.dados_usuario = {}
-        st.rerun()
+        st.session_state.menu = "Dashboard"
+        st.experimental_rerun()
