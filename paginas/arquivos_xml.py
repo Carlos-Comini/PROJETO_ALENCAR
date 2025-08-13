@@ -280,8 +280,11 @@ def exibir():
                     "data_upload": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
                     "data_documento": data_documento
                 }
-                registrar_documento(info_doc)
-                st.info(f"Arquivo XML salvo e registrado como {info_doc['tipo_xml']} - {info_doc['tipo_nota']}!")
+                sucesso = registrar_documento(info_doc)
+                if not sucesso:
+                    st.error(f"Já existe um arquivo com este nome para esta empresa!")
+                else:
+                    st.info(f"Arquivo XML salvo e registrado como {info_doc['tipo_xml']} - {info_doc['tipo_nota']}!")
         st.success(f"{len(uploaded)} arquivo(s) salvo(s) com sucesso!")
 
     st.subheader("📁 Arquivos Recebidos")

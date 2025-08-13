@@ -2,12 +2,17 @@ def inserir_empresa(cnpj, razao_social, endereco=None, telefone=None, email=None
     criar_tabela_empresas()
     conn = conectar()
     cursor = conn.cursor()
+    cursor.execute('SELECT 1 FROM empresas WHERE cnpj=?', (cnpj,))
+    if cursor.fetchone():
+        conn.close()
+        return False  # Empresa já existe
     cursor.execute('''
-        INSERT OR IGNORE INTO empresas (cnpj, razao_social, endereco, telefone, email)
+        INSERT INTO empresas (cnpj, razao_social, endereco, telefone, email)
         VALUES (?, ?, ?, ?, ?)
     ''', (cnpj, razao_social, endereco or '', telefone or '', email or ''))
     conn.commit()
     conn.close()
+    return True
 def criar_tabela_empresas():
     conn = conectar()
     cursor = conn.cursor()

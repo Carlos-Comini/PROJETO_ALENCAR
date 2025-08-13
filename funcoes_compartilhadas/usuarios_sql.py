@@ -20,6 +20,10 @@ def conectar():
 def inserir_usuario(nome, email, senha, tipo, empresa=None, permissoes=None):
     conn = conectar()
     cursor = conn.cursor()
+    cursor.execute('SELECT 1 FROM usuarios WHERE email=?', (email,))
+    if cursor.fetchone():
+        conn.close()
+        return False  # Usuário já existe
     cadastrar = 'Sim' if permissoes and permissoes.get('cadastrar') else 'Não'
     ver_arquivo = 'Sim' if permissoes and permissoes.get('ver_arquivo') else 'Não'
     ver_xml = 'Sim' if permissoes and permissoes.get('ver_xml') else 'Não'
@@ -29,6 +33,7 @@ def inserir_usuario(nome, email, senha, tipo, empresa=None, permissoes=None):
     )
     conn.commit()
     conn.close()
+    return True
 
 def autenticar(email: str, senha: str) -> Optional[Dict]:
     conn = conectar()

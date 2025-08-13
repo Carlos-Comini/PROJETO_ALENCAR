@@ -78,16 +78,22 @@ def exibir():
                             "ver_xml": permitir_ver_xml
                         }
                         senha_hash = hash_senha(senha)
-                        inserir_usuario(nome, email, senha_hash, "Escritorio", permissoes=permissoes)
-                        st.success("Usuário do escritório cadastrado.")
+                        sucesso = inserir_usuario(nome, email, senha_hash, "Escritorio", permissoes=permissoes)
+                        if not sucesso:
+                            st.error("Já existe um usuário cadastrado com este e-mail.")
+                        else:
+                            st.success("Usuário do escritório cadastrado.")
                     else:
                         permissoes = {
                             "ver_arquivo": permitir_ver_arquivo,
                             "ver_xml": permitir_ver_xml
                         }
                         senha_hash = hash_senha(senha)
-                        inserir_usuario(nome, email, senha_hash, "Cliente", empresa=empresa, permissoes=permissoes)
-                        st.success("Usuário de cliente cadastrado.")
+                        sucesso = inserir_usuario(nome, email, senha_hash, "Cliente", empresa=empresa, permissoes=permissoes)
+                        if not sucesso:
+                            st.error("Já existe um usuário cadastrado com este e-mail.")
+                        else:
+                            st.success("Usuário de cliente cadastrado.")
 
     elif escolha == "Usuários cadastrados":
         st.subheader("Usuários cadastrados")

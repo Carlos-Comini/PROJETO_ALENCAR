@@ -124,7 +124,11 @@ def exibir():
                 "data_upload": datetime.now().strftime("%Y-%m-%d %H:%M:%S")
             }
             registrar_documento(info_doc)
-            st.info("Arquivo salvo e registrado!")
+            sucesso = registrar_documento(info_doc)
+            if not sucesso:
+                st.error("Já existe um arquivo com este nome para esta empresa!")
+            else:
+                st.info("Arquivo salvo e registrado!")
         st.success(f"{len(arquivos)} arquivo(s) enviado(s) com sucesso!")
 
     st.subheader("📂 Arquivos Armazenados")

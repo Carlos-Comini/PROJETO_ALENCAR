@@ -52,6 +52,10 @@ CREATE TABLE IF NOT EXISTS documentos (
 def registrar_documento(info: Dict):
     conn = conectar()
     cursor = conn.cursor()
+    cursor.execute('''SELECT 1 FROM documentos WHERE nome=? AND caminho=? AND empresa=?''', (info['nome'], info['caminho'], info['empresa']))
+    if cursor.fetchone():
+        conn.close()
+        return False  # Documento já existe
     cursor.execute('''
         INSERT INTO documentos (nome, caminho, empresa, cnpj, banco, ano, mes, tipo, tipo_nota, usuario, razao_social_usuario, data_upload, data_documento)
         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
@@ -63,6 +67,7 @@ def registrar_documento(info: Dict):
     ))
     conn.commit()
     conn.close()
+    return True
 
 def listar_documentos(filtro_empresa=None) -> List[Dict]:
     conn = conectar()
