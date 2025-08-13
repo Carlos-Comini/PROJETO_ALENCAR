@@ -65,7 +65,9 @@ def exibir():
                         empresas = empresas_df.iloc[:,0].astype(str).tolist()
                 else:
                     empresas = []
-                empresas_selecionadas = st.multiselect("Empresas", empresas)
+                if not empresas:
+                    st.warning("Nenhuma empresa cadastrada. Cadastre empresas antes de criar usuários do tipo Cliente.")
+                empresas_selecionadas = st.multiselect("Empresas", empresas, disabled=not empresas)
                 permitir_ver_arquivo = st.checkbox("Permitir Ver Arquivo")
                 permitir_ver_xml = st.checkbox("Permitir Ver XML")
             submit = st.form_submit_button("Salvar")
