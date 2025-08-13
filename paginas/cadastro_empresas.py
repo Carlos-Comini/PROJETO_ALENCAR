@@ -35,9 +35,12 @@ def exibir():
 
         if salvar:
             if cnpj and razao_social:
-                inserir_empresa(cnpj, razao_social)
-                st.success("Empresa cadastrada com sucesso.")
-                st.session_state["razao_social"] = ""
+                sucesso = inserir_empresa(cnpj, razao_social)
+                if not sucesso:
+                    st.error("Já existe uma empresa cadastrada com este CNPJ.")
+                else:
+                    st.success("Empresa cadastrada com sucesso.")
+                    st.session_state["razao_social"] = ""
             else:
                 st.error("Preencha todos os campos.")
 
