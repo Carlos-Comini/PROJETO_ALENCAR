@@ -43,6 +43,7 @@ def buscar_empresa_por_cnpj(cnpj: str) -> Optional[Dict]:
     return None
 
 def listar_empresas() -> List[Dict]:
+    criar_tabela_empresas()
     conn = conectar()
     cursor = conn.cursor()
     cursor.execute("SELECT * FROM empresas")

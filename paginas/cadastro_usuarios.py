@@ -1,6 +1,8 @@
 import streamlit as st
-import streamlit as st
+import pandas as pd
+from funcoes_compartilhadas.usuarios_sql import inserir_usuario, listar_usuarios
 from funcoes_compartilhadas.estilos import aplicar_estilo_padrao, set_page_title
+
 aplicar_estilo_padrao()
 set_page_title("Cadastro de Usuários")
 st.markdown("""
@@ -28,14 +30,9 @@ st.markdown("""
         <div class="topbar-account">Minha Conta</div>
     </div>
 """, unsafe_allow_html=True)
-import streamlit as st
-from funcoes_compartilhadas.usuarios_sql import inserir_usuario, listar_usuarios
-from funcoes_compartilhadas.estilos import aplicar_estilo_padrao
 
 def exibir():
-    aplicar_estilo_padrao()
     st.header("Cadastro de Usuários")
-
     st.markdown("---")
     escolha = st.radio("Selecione a opção:", ["Cadastro de Usuário", "Usuários cadastrados"], horizontal=True)
 
@@ -46,28 +43,15 @@ def exibir():
             email = st.text_input("Email")
             senha = st.text_input("Senha", type="password")
             from funcoes_compartilhadas.conversa_banco import hash_senha
-
+            # Validação básica
+            erro = None
             if tipo == "Escritório":
                 permitir_cadastros = st.checkbox("Permitir Cadastros")
                 permitir_ver_arquivo = st.checkbox("Permitir Ver Arquivo")
                 permitir_ver_xml = st.checkbox("Permitir Ver XML")
-
-                if st.form_submit_button("Salvar"):
-                    permissoes = {
-                        "cadastrar": permitir_cadastros,
-                        "ver_arquivo": permitir_ver_arquivo,
-                        "ver_xml": permitir_ver_xml
-                    }
-                    senha_hash = hash_senha(senha)
-                    inserir_usuario(nome, email, senha_hash, "Escritorio", permissoes=permissoes)
-                    st.success("Usuário do escritório cadastrado.")
-
             else:
-                # Buscar empresas do banco SQL
-                import pandas as pd
                 from funcoes_compartilhadas.empresas_sql import listar_empresas
                 empresas_df = pd.DataFrame(listar_empresas())
-                # Corrige KeyError: usa 'razao_social' se 'nome_empresa' não existir
                 if not empresas_df.empty:
                     if "nome_empresa" in empresas_df.columns:
                         empresas = empresas_df["nome_empresa"].tolist()
@@ -80,21 +64,35 @@ def exibir():
                 empresa = st.selectbox("Empresa", empresas)
                 permitir_ver_arquivo = st.checkbox("Permitir Ver Arquivo")
                 permitir_ver_xml = st.checkbox("Permitir Ver XML")
-
-                if st.form_submit_button("Salvar"):
-                    permissoes = {
-                        "ver_arquivo": permitir_ver_arquivo,
-                        "ver_xml": permitir_ver_xml
-                    }
-                    senha_hash = hash_senha(senha)
-                    inserir_usuario(nome, email, senha_hash, "Cliente", empresa=empresa, permissoes=permissoes)
-                    st.success("Usuário de cliente cadastrado.")
+            submit = st.form_submit_button("Salvar")
+            if submit:
+                if not nome or not email or not senha:
+                    st.error("Preencha todos os campos obrigatórios!")
+                elif len(senha) < 6:
+                    st.error("A senha deve ter pelo menos 6 caracteres.")
+                else:
+                    if tipo == "Escritório":
+                        permissoes = {
+                            "cadastrar": permitir_cadastros,
+                            "ver_arquivo": permitir_ver_arquivo,
+                            "ver_xml": permitir_ver_xml
+                        }
+                        senha_hash = hash_senha(senha)
+                        inserir_usuario(nome, email, senha_hash, "Escritorio", permissoes=permissoes)
+                        st.success("Usuário do escritório cadastrado.")
+                    else:
+                        permissoes = {
+                            "ver_arquivo": permitir_ver_arquivo,
+                            "ver_xml": permitir_ver_xml
+                        }
+                        senha_hash = hash_senha(senha)
+                        inserir_usuario(nome, email, senha_hash, "Cliente", empresa=empresa, permissoes=permissoes)
+                        st.success("Usuário de cliente cadastrado.")
 
     elif escolha == "Usuários cadastrados":
         st.subheader("Usuários cadastrados")
         opcao_tabela = st.radio("Visualizar usuários do tipo:", ["Escritório", "Cliente"], horizontal=True)
         usuarios = listar_usuarios()
-        import pandas as pd
         if usuarios:
             df_usuarios = pd.DataFrame(usuarios)
             if opcao_tabela == "Escritório":
@@ -102,7 +100,6 @@ def exibir():
             else:
                 df_filtrados = df_usuarios[df_usuarios["tipo"].str.lower() == "cliente"]
             if not df_filtrados.empty:
-                # Remove colunas 'id' e 'senha' da exibição
                 colunas_ocultas = [col for col in ['id', 'senha'] if col in df_filtrados.columns]
                 st.dataframe(df_filtrados.drop(columns=colunas_ocultas), use_container_width=True)
             else:
