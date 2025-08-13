@@ -65,7 +65,7 @@ def exibir():
                         empresas = empresas_df.iloc[:,0].astype(str).tolist()
                 else:
                     empresas = []
-                empresa = st.selectbox("Empresa", empresas)
+                empresas_selecionadas = st.multiselect("Empresas", empresas)
                 permitir_ver_arquivo = st.checkbox("Permitir Ver Arquivo")
                 permitir_ver_xml = st.checkbox("Permitir Ver XML")
             submit = st.form_submit_button("Salvar")
@@ -93,11 +93,36 @@ def exibir():
                             "ver_xml": permitir_ver_xml
                         }
                         senha_hash = hash_senha(senha)
-                        sucesso = inserir_usuario(nome, email, senha_hash, "Cliente", empresa=empresa, permissoes=permissoes)
+                        sucesso = inserir_usuario(nome, email, senha_hash, "Cliente", empresa=None, permissoes=permissoes)
                         if not sucesso:
                             st.error("Já existe um usuário cadastrado com este e-mail.")
                         else:
-                            st.success("Usuário de cliente cadastrado.")
+                            # Salva associações usuário-empresa
+                            from funcoes_compartilhadas.usuarios_sql import listar_usuarios, criar_tabela_usuarios_empresas
+                            criar_tabela_usuarios_empresas()
+                            usuarios = listar_usuarios()
+                            usuario_id = None
+                            for u in usuarios:
+                                if u["email"] == email:
+                                    usuario_id = u["id"]
+                                    break
+                            if usuario_id and empresas_selecionadas:
+                                from funcoes_compartilhadas.empresas_sql import listar_empresas
+                                empresas_db = listar_empresas()
+                                for emp_nome in empresas_selecionadas:
+                                    for emp in empresas_db:
+                                        if emp_nome in (emp.get("nome_empresa"), emp.get("razao_social")):
+                                            emp_id = emp["id"]
+                                            # Salva associação
+                                            import sqlite3, os
+                                            BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+                                            DB_PATH = os.path.join(BASE_DIR, '..', 'usuarios.db')
+                                            conn = sqlite3.connect(DB_PATH)
+                                            cursor = conn.cursor()
+                                            cursor.execute('INSERT OR IGNORE INTO usuarios_empresas (id_usuario, id_empresa) VALUES (?, ?)', (usuario_id, emp_id))
+                                            conn.commit()
+                                            conn.close()
+                            st.success("Usuário de cliente cadastrado e empresas associadas.")
 
     elif escolha == "Usuários cadastrados":
         st.subheader("Usuários cadastrados")

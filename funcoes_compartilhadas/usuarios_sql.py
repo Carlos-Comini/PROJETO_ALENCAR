@@ -1,3 +1,20 @@
+# Cria tabela de associação N para N entre usuários e empresas
+def criar_tabela_usuarios_empresas():
+    import os
+    import sqlite3
+    BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+    DB_PATH = os.path.join(BASE_DIR, '..', 'usuarios.db')
+    conn = sqlite3.connect(DB_PATH)
+    cursor = conn.cursor()
+    cursor.execute('''
+        CREATE TABLE IF NOT EXISTS usuarios_empresas (
+            id_usuario INTEGER,
+            id_empresa INTEGER,
+            PRIMARY KEY (id_usuario, id_empresa)
+        )
+    ''')
+    conn.commit()
+    conn.close()
 import sqlite3
 import os
 from typing import Optional, Dict

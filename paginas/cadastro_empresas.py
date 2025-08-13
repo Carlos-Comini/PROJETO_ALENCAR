@@ -16,6 +16,11 @@ def exibir():
     set_page_title("Cadastro de Empresas")
     st.header("Cadastro de Empresas Clientes")
 
+    # Mostra o caminho absoluto do banco de empresas para diagnóstico
+    import os
+    from funcoes_compartilhadas.empresas_sql import DB_PATH
+    st.info(f"Banco de empresas em uso: {os.path.abspath(DB_PATH)}")
+
 
     with st.form("form_empresa"):
         cnpj = st.text_input("CNPJ")
