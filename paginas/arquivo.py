@@ -142,15 +142,13 @@ def exibir():
     import os
     from funcoes_compartilhadas.documentos_sql import deletar_documento
     for doc in documentos:
-        with st.expander(f'{doc["nome"]} — {doc["banco"]} {doc["mes"]}/{doc["ano"]} — {doc["empresa"]}'):
-            st.write(f"📌 Empresa: {doc['empresa']}")
-            st.write(f"🏦 Banco: {doc['banco']}")
-            # Exibe usuário e razão social do usuário logado
-            nome_usuario = doc.get('usuario', 'N/A')
-            razao_usuario = doc.get('razao_social_usuario', 'N/A')
-            st.write(f"👤 Usuário: {nome_usuario}")
-            st.write(f"🏢 Razão Social: {razao_usuario}")
-            st.write(f"📅 Data: {doc['mes']}/{doc['ano']}")
+        nome_usuario = doc.get('usuario', 'N/A')
+        with st.expander(f'{doc["nome"]} — {nome_usuario}'):
+            st.markdown(f"""
+**Empresa:** {doc.get('empresa', 'N/A')}
+**Usuário:** {nome_usuario}
+**Data da Importação:** {doc.get('data_upload', 'N/A')}
+""")
             with open(doc["caminho"], "rb") as f:
                 st.download_button("⬇️ Baixar", f, file_name=doc["nome"], key=f"download_{doc['id']}")
             if st.button(f"🗑️ Excluir documento {doc['id']}", key=f"del_{doc['id']}"):
