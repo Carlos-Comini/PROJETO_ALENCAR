@@ -100,7 +100,7 @@ def exibir():
                             st.error("Já existe um usuário cadastrado com este e-mail.")
                         else:
                             # Salva associações usuário-empresa
-                            from funcoes_compartilhadas.usuarios_sql import listar_usuarios, criar_tabela_usuarios_empresas
+                            from funcoes_compartilhadas.usuarios_sql import criar_tabela_usuarios_empresas
                             criar_tabela_usuarios_empresas()
                             usuarios = listar_usuarios()
                             usuario_id = None
