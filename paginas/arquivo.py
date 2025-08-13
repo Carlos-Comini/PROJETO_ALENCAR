@@ -121,7 +121,7 @@ def exibir():
                 "usuario": usuario_nome,
                 "razao_social_usuario": usuario_razao,
                 "tipo": mimetypes.guess_type(caminho)[0] or "desconhecido",
-                "data_upload": datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+                "data_upload": datetime.now().strftime("%d-%m-%Y %H:%M:%S")
             }
             registrar_documento(info_doc)
             sucesso = registrar_documento(info_doc)
@@ -143,12 +143,20 @@ def exibir():
     from funcoes_compartilhadas.documentos_sql import deletar_documento
     for doc in documentos:
         nome_usuario = doc.get('usuario', 'N/A')
+        # Busca razão social do usuário logado se não encontrar empresa
+        razao_empresa = doc.get('empresa', None)
+        if not razao_empresa or razao_empresa.lower() == 'desconhecida':
+            dados_usuario = st.session_state.get("dados_usuario", {})
+            razao_empresa = dados_usuario.get("razao_social", 'Não informado')
+        data_importacao = doc.get('data_upload', 'N/A')
         with st.expander(f'{doc["nome"]} — {nome_usuario}'):
             st.markdown(f"""
-**Empresa:** {doc.get('empresa', 'N/A')}
-**Usuário:** {nome_usuario}
-**Data da Importação:** {doc.get('data_upload', 'N/A')}
-""")
+<div style='display: flex; flex-direction: column; gap: 0.5rem;'>
+<span>🏢 <b>Empresa:</b> {razao_empresa}</span>
+<span>👤 <b>Usuário:</b> {nome_usuario}</span>
+<span>📅 <b>Data da Importação:</b> {data_importacao}</span>
+</div>
+""", unsafe_allow_html=True)
             with open(doc["caminho"], "rb") as f:
                 st.download_button("⬇️ Baixar", f, file_name=doc["nome"], key=f"download_{doc['id']}")
             if st.button(f"🗑️ Excluir documento {doc['id']}", key=f"del_{doc['id']}"):
