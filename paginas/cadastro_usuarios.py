@@ -131,13 +131,21 @@ def exibir():
         opcao_tabela = st.radio("Visualizar usuários do tipo:", ["Escritório", "Cliente"], horizontal=True)
         usuarios = listar_usuarios()
         if usuarios:
+            from funcoes_compartilhadas.usuarios_empresas_sql import get_empresas_usuario
             df_usuarios = pd.DataFrame(usuarios)
             if opcao_tabela == "Escritório":
                 df_filtrados = df_usuarios[df_usuarios["tipo"].str.lower() == "escritorio"]
             else:
                 df_filtrados = df_usuarios[df_usuarios["tipo"].str.lower() == "cliente"]
+                # Adiciona coluna com empresas associadas
+                empresas_col = []
+                for idx, row in df_filtrados.iterrows():
+                    empresas = get_empresas_usuario(row['id'])
+                    empresas_col.append(", ".join(empresas) if empresas else "-")
+                df_filtrados = df_filtrados.copy()
+                df_filtrados["empresas_associadas"] = empresas_col
             if not df_filtrados.empty:
-                colunas_ocultas = [col for col in ['id', 'senha'] if col in df_filtrados.columns]
+                colunas_ocultas = [col for col in ['id', 'senha', 'empresa'] if col in df_filtrados.columns]
                 st.dataframe(df_filtrados.drop(columns=colunas_ocultas), use_container_width=True)
             else:
                 st.info(f"Nenhum usuário do tipo {opcao_tabela} cadastrado ainda.")

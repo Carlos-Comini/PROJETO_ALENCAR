@@ -94,41 +94,48 @@ def exibir():
         from funcoes_compartilhadas.empresas_sql import buscar_empresa_por_cnpj
         dados_usuario = st.session_state.get("dados_usuario", {})
         usuario_nome = dados_usuario.get("nome", "anonimo")
-        usuario_razao = dados_usuario.get("razao_social", "desconhecida")
+        usuario_id = dados_usuario.get("id")
+        # Busca empresas associadas ao usuário logado
+        empresas_associadas = []
+        if usuario_id:
+            try:
+                from funcoes_compartilhadas.usuarios_empresas_sql import get_empresas_usuario
+                empresas_associadas = get_empresas_usuario(usuario_id)
+            except Exception:
+                empresas_associadas = []
+        empresas_str = ", ".join(empresas_associadas) if empresas_associadas else "desconhecida"
         for arq in arquivos:
             nome = arq.name
             cnpj, banco, ano, mes = extrair_info(nome)
-            pasta_destino = BASE_DIR / cnpj / banco / ano / mes
-            pasta_destino.mkdir(parents=True, exist_ok=True)
-            # Buscar nome da empresa via SQL
-            empresa_info = buscar_empresa_por_cnpj(cnpj)
-            razao_social = empresa_info["razao_social"] if empresa_info else usuario_razao
-            # Novo nome: documento_usuario_razao_social.ext
             ext = Path(nome).suffix
-            nome_final = f"{Path(nome).stem}_{usuario_nome}_{razao_social}{ext}"
-            caminho = pasta_destino / nome_final
-            with open(caminho, "wb") as f:
-                f.write(arq.read())
-            # Registrar no banco
-            info_doc = {
-                "nome": nome_final,
-                "caminho": str(caminho),
-                "empresa": razao_social,
-                "cnpj": cnpj,
-                "banco": banco,
-                "ano": ano,
-                "mes": mes,
-                "usuario": usuario_nome,
-                "razao_social_usuario": usuario_razao,
-                "tipo": mimetypes.guess_type(caminho)[0] or "desconhecido",
-                "data_upload": datetime.now().strftime("%d-%m-%Y %H:%M:%S")
-            }
-            registrar_documento(info_doc)
-            sucesso = registrar_documento(info_doc)
-            if not sucesso:
-                st.error("Já existe um arquivo com este nome para esta empresa!")
-            else:
-                st.info("Arquivo salvo e registrado!")
+            # Se houver empresas associadas, salva em cada diretório
+            empresas_para_salvar = empresas_associadas if empresas_associadas else [empresas_str]
+            for razao_social in empresas_para_salvar:
+                pasta_destino = BASE_DIR / cnpj / banco / ano / mes / razao_social
+                pasta_destino.mkdir(parents=True, exist_ok=True)
+                nome_final = f"{Path(nome).stem}_{usuario_nome}_{razao_social}{ext}"
+                caminho = pasta_destino / nome_final
+                with open(caminho, "wb") as f:
+                    f.write(arq.read())
+                # Registrar no banco
+                info_doc = {
+                    "nome": nome_final,
+                    "caminho": str(caminho),
+                    "empresa": razao_social,
+                    "cnpj": cnpj,
+                    "banco": banco,
+                    "ano": ano,
+                    "mes": mes,
+                    "usuario": usuario_nome,
+                    "razao_social_usuario": empresas_str,
+                    "tipo": mimetypes.guess_type(caminho)[0] or "desconhecido",
+                    "data_upload": datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+                }
+                sucesso = registrar_documento(info_doc)
+                if not sucesso:
+                    st.error(f"Já existe um arquivo com este nome para a empresa {razao_social}!")
+                else:
+                    st.info(f"Arquivo salvo e registrado para {razao_social}!")
         st.success(f"{len(arquivos)} arquivo(s) enviado(s) com sucesso!")
 
     st.subheader("📂 Arquivos Armazenados")
