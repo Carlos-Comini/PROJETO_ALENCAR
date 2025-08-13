@@ -95,6 +95,19 @@ def exibir():
         dados_usuario = st.session_state.get("dados_usuario", {})
         usuario_nome = dados_usuario.get("nome", "anonimo")
         usuario_id = dados_usuario.get("id")
+        # Se não houver id, tenta buscar pelo e-mail
+        if not usuario_id:
+            usuario_email = dados_usuario.get("email")
+            if usuario_email:
+                try:
+                    from funcoes_compartilhadas.usuarios_sql import listar_usuarios
+                    usuarios = listar_usuarios()
+                    for u in usuarios:
+                        if u.get("email") == usuario_email:
+                            usuario_id = u.get("id")
+                            break
+                except Exception:
+                    usuario_id = None
         # Busca empresas associadas ao usuário logado
         empresas_associadas = []
         if usuario_id:
