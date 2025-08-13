@@ -29,9 +29,12 @@ def criar_tabela_empresas():
     conn.commit()
     conn.close()
 import sqlite3
+import os
 from typing import Optional, Dict, List
 
-DB_PATH = 'usuarios.db'
+# Caminho absoluto do banco na raiz do projeto
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+DB_PATH = os.path.join(BASE_DIR, '..', 'empresas.db')
 
 def conectar():
     return sqlite3.connect(DB_PATH)
