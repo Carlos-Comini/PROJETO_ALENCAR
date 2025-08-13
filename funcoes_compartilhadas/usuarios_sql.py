@@ -67,3 +67,17 @@ def listar_usuarios() -> list:
     colunas = [desc[0] for desc in cursor.description]
     conn.close()
     return [dict(zip(colunas, row)) for row in rows]
+
+def registrar_usuario_padrao():
+    # Registra o usuário ELIANE se não existir
+    conn = conectar()
+    cursor = conn.cursor()
+    email = "eliane@alencarassociados.com.br"
+    cursor.execute('SELECT 1 FROM usuarios WHERE email=?', (email,))
+    if not cursor.fetchone():
+        cursor.execute('''INSERT INTO usuarios (nome, email, senha, tipo, empresa, cadastrar, ver_arquivo, ver_xml)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?)''',
+            ("ELIANE", email, "8d969eef6ecad3c29a3a629280e686cf0c3f5d5a86aff3ca12020c923adc6c92", "Escritorio", None, "Sim", "Sim", "Sim")
+        )
+        conn.commit()
+    conn.close()

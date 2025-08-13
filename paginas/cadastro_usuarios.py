@@ -32,6 +32,10 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 def exibir():
+    # Mostra o caminho absoluto do banco de dados para diagnóstico
+    import os
+    from funcoes_compartilhadas.usuarios_sql import DB_PATH
+    st.info(f"Banco de dados em uso: {os.path.abspath(DB_PATH)}")
     st.header("Cadastro de Usuários")
     st.markdown("---")
     escolha = st.radio("Selecione a opção:", ["Cadastro de Usuário", "Usuários cadastrados"], horizontal=True)
