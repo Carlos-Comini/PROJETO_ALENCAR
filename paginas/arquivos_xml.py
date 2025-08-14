@@ -309,8 +309,15 @@ def exibir():
                     st.write(f"📅 Data do Documento: {data_real}")
                 else:
                     st.write(f"📅 Data do Documento: Não disponível")
-                with open(doc["caminho"], "rb") as f:
-                    st.download_button("⬇️ Baixar XML", f, file_name=doc["nome"], key=f"download_{doc['id']}")
+                import os
+                if os.path.exists(doc["caminho"]):
+                    try:
+                        with open(doc["caminho"], "rb") as f:
+                            st.download_button("⬇️ Baixar XML", f, file_name=doc["nome"], key=f"download_{doc['id']}")
+                    except Exception as e:
+                        st.error(f"Erro ao abrir o arquivo: {e}")
+                else:
+                    st.error(f"Arquivo não encontrado: {doc['caminho']}")
                 if st.button(f"🗑️ Excluir XML {doc['id']}", key=f"delxml_{doc['id']}"):
                     if st.session_state.get(f"confirm_delxml_{doc['id']}") != True:
                         st.warning("Tem certeza que deseja excluir este XML?")
