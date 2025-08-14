@@ -18,6 +18,8 @@ def criar_tabela_usuarios_empresas():
 import sqlite3
 import os
 from typing import Optional, Dict
+from sqlalchemy import text
+from config import engine
 
 # Caminho absoluto do banco na raiz do projeto
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -37,23 +39,30 @@ def conectar():
         ver_xml TEXT
     )''')
     return conn
-def inserir_usuario(nome, email, senha, tipo, empresa=None, permissoes=None):
-    conn = conectar()
-    cursor = conn.cursor()
-    cursor.execute('SELECT 1 FROM usuarios WHERE email=?', (email,))
-    if cursor.fetchone():
-        conn.close()
-        return False  # Usuário já existe
-    cadastrar = 'Sim' if permissoes and permissoes.get('cadastrar') else 'Não'
-    ver_arquivo = 'Sim' if permissoes and permissoes.get('ver_arquivo') else 'Não'
-    ver_xml = 'Sim' if permissoes and permissoes.get('ver_xml') else 'Não'
-    cursor.execute('''INSERT INTO usuarios (nome, email, senha, tipo, empresa, cadastrar, ver_arquivo, ver_xml)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?)''',
-        (nome, email, senha, tipo, empresa, cadastrar, ver_arquivo, ver_xml)
-    )
-    conn.commit()
-    conn.close()
-    return True
+def inserir_usuario(nome, email, senha, tipo, cadastrar, ver_arquivo, ver_xml):
+    with engine.begin() as conn:
+        existe = conn.execute(
+            text("SELECT 1 FROM usuarios WHERE email = :email"),
+            {"email": email}
+        ).first()
+        if existe:
+            print(f"Usuário com e-mail {email} já existe.")
+            return
+        conn.execute(
+            text("""
+                INSERT INTO usuarios (nome, email, senha, tipo, cadastrar, ver_arquivo, ver_xml)
+                VALUES (:nome, :email, :senha, :tipo, :cadastrar, :ver_arquivo, :ver_xml)
+            """),
+            {
+                "nome": nome,
+                "email": email,
+                "senha": senha,
+                "tipo": tipo,
+                "cadastrar": cadastrar,
+                "ver_arquivo": ver_arquivo,
+                "ver_xml": ver_xml
+            }
+        )
 
 def autenticar(email: str, senha: str) -> Optional[Dict]:
     conn = conectar()
@@ -79,14 +88,10 @@ def buscar_por_id(user_id: int) -> Optional[Dict]:
         return dict(zip(colunas, row))
     return None
 
-def listar_usuarios() -> list:
-    conn = conectar()
-    cursor = conn.cursor()
-    cursor.execute("SELECT * FROM usuarios")
-    rows = cursor.fetchall()
-    colunas = [desc[0] for desc in cursor.description]
-    conn.close()
-    return [dict(zip(colunas, row)) for row in rows]
+def listar_usuarios():
+    with engine.connect() as conn:
+        result = conn.execute(text("SELECT * FROM usuarios"))
+        return [dict(row) for row in result.mappings()]
 
 def registrar_usuario_padrao():
     # Registra o usuário ELIANE se não existir
