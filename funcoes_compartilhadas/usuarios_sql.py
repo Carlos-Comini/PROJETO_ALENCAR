@@ -39,6 +39,7 @@ def conectar():
         ver_xml TEXT
     )''')
     return conn
+
 def inserir_usuario(nome, email, senha, tipo, cadastrar, ver_arquivo, ver_xml):
     with engine.begin() as conn:
         existe = conn.execute(
@@ -65,28 +66,20 @@ def inserir_usuario(nome, email, senha, tipo, cadastrar, ver_arquivo, ver_xml):
         )
 
 def autenticar(email: str, senha: str) -> Optional[Dict]:
-    conn = conectar()
-    cursor = conn.cursor()
-    cursor.execute("""
-        SELECT * FROM usuarios WHERE email=? AND senha=?
-    """, (email, senha))
-    row = cursor.fetchone()
-    conn.close()
-    if row:
-        colunas = [desc[0] for desc in cursor.description]
-        return dict(zip(colunas, row))
-    return None
+    with engine.connect() as conn:
+        result = conn.execute(
+            text("SELECT * FROM usuarios WHERE email = :email AND senha = :senha"),
+            {"email": email, "senha": senha}
+        ).mappings().first()
+        return dict(result) if result else None
 
 def buscar_por_id(user_id: int) -> Optional[Dict]:
-    conn = conectar()
-    cursor = conn.cursor()
-    cursor.execute("SELECT * FROM usuarios WHERE id=?", (user_id,))
-    row = cursor.fetchone()
-    conn.close()
-    if row:
-        colunas = [desc[0] for desc in cursor.description]
-        return dict(zip(colunas, row))
-    return None
+    with engine.connect() as conn:
+        result = conn.execute(
+            text("SELECT * FROM usuarios WHERE id = :id"),
+            {"id": user_id}
+        ).mappings().first()
+        return dict(result) if result else None
 
 def listar_usuarios():
     with engine.connect() as conn:
@@ -95,14 +88,26 @@ def listar_usuarios():
 
 def registrar_usuario_padrao():
     # Registra o usuário ELIANE se não existir
-    conn = conectar()
-    cursor = conn.cursor()
     email = "eliane@alencarassociados.com.br"
-    cursor.execute('SELECT 1 FROM usuarios WHERE email=?', (email,))
-    if not cursor.fetchone():
-        cursor.execute('''INSERT INTO usuarios (nome, email, senha, tipo, empresa, cadastrar, ver_arquivo, ver_xml)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?)''',
-            ("ELIANE", email, "8d969eef6ecad3c29a3a629280e686cf0c3f5d5a86aff3ca12020c923adc6c92", "Escritorio", None, "Sim", "Sim", "Sim")
-        )
-        conn.commit()
-    conn.close()
+    with engine.begin() as conn:
+        existe = conn.execute(
+            text("SELECT 1 FROM usuarios WHERE email = :email"),
+            {"email": email}
+        ).first()
+        if not existe:
+            conn.execute(
+                text("""
+                    INSERT INTO usuarios (nome, email, senha, tipo, empresa, cadastrar, ver_arquivo, ver_xml)
+                    VALUES (:nome, :email, :senha, :tipo, :empresa, :cadastrar, :ver_arquivo, :ver_xml)
+                """),
+                {
+                    "nome": "ELIANE",
+                    "email": email,
+                    "senha": "8d969eef6ecad3c29a3a629280e686cf0c3f5d5a86aff3ca12020c923adc6c92",
+                    "tipo": "Escritorio",
+                    "empresa": None,
+                    "cadastrar": "Sim",
+                    "ver_arquivo": "Sim",
+                    "ver_xml": "Sim"
+                }
+            )
