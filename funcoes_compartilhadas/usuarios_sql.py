@@ -111,3 +111,21 @@ def registrar_usuario_padrao():
                     "ver_xml": "Sim"
                 }
             )
+
+import streamlit as st
+from funcoes_compartilhadas.usuarios_sql import autenticar
+
+if 'usuario' not in st.session_state:
+    email = st.text_input("Email")
+    senha = st.text_input("Senha", type="password")
+    if st.button("Entrar"):
+        usuario = autenticar(email, senha)
+        if usuario:
+            st.session_state['usuario'] = usuario
+            st.success("Login realizado com sucesso!")
+            st.experimental_rerun()
+        else:
+            st.error("Usuário ou senha inválidos.")
+else:
+    st.write(f"Bem-vindo, {st.session_state['usuario']['nome']}!")
+    # Aqui segue o restante do app
